@@ -143,7 +143,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
           <div className="flex flex-1 h-[calc(100vh-4rem)]">
             <div className="mx-auto flex w-full max-w-[1440px]">
               <AppSidebar />
-              <main className="flex-1 overflow-y-auto">
+              <main className="flex-1">
                 <div className="p-4 sm:p-6 md:p-8">
                   {children}
                 </div>
