@@ -12,7 +12,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
-import { Database, Settings, Code, Table } from 'lucide-react';
+import { Database, Settings, Code, Table, FileJson } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +30,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/">
                   <Database />
-                  Schema Builder
+                  AI Schema Builder
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -38,7 +38,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <SidebarMenuButton asChild>
                 <Link href="/operate">
                   <Code />
-                  Operation Builder
+                  AI Operation Builder
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -47,6 +47,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/browse">
                   <Table />
                   Data Browser
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/schemas">
+                  <FileJson />
+                  Schema Builder
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
