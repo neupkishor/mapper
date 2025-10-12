@@ -11,7 +11,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
-import { Database, Settings } from 'lucide-react';
+import { Database, Settings, Code } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,6 +30,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/">
                   <Database />
                   Schema Builder
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/operate">
+                  <Code />
+                  Operation Builder
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

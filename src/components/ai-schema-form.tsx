@@ -69,6 +69,8 @@ export function AISchemaForm() {
     try {
       const suggestion = await suggestSchema(values);
       setResult(suggestion);
+      // Save the last generated schema to local storage
+      localStorage.setItem("lastSchema", JSON.stringify(suggestion));
     } catch (error) {
       console.error("Error getting schema suggestion:", error);
       toast({
