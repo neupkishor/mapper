@@ -23,6 +23,11 @@ const fieldSchema = z.object({
 const schemaFormSchema = z.object({
   collectionName: z.string().min(1, 'Collection name is required.'),
   fields: z.array(fieldSchema).min(1, 'At least one field is required.'),
+  // API specific fields
+  getEndpoint: z.string().optional(),
+  createEndpoint: z.string().optional(),
+  updateEndpoint: z.string().optional(),
+  deleteEndpoint: z.string().optional(),
 });
 
 type SchemaFormValues = z.infer<typeof schemaFormSchema>;
@@ -54,6 +59,10 @@ export function SchemaBuilder() {
     defaultValues: {
       collectionName: '',
       fields: [{ fieldName: '', fieldType: 'string' }],
+      getEndpoint: '',
+      createEndpoint: '',
+      updateEndpoint: '',
+      deleteEndpoint: '',
     },
   });
 
@@ -100,6 +109,10 @@ export function SchemaBuilder() {
       form.reset({
         collectionName: '',
         fields: [{ fieldName: '', fieldType: 'string' }],
+        getEndpoint: '',
+        createEndpoint: '',
+        updateEndpoint: '',
+        deleteEndpoint: '',
       });
       toast({
         title: 'Schema Deleted',
@@ -107,6 +120,69 @@ export function SchemaBuilder() {
       });
     }
   };
+
+  const renderApiEndpoints = () => {
+    if (dbConfig?.dbType !== 'API') {
+      return null;
+    }
+    return (
+        <div className="space-y-4 pt-4">
+            <h3 className="text-lg font-medium">API Endpoints</h3>
+            <FormField
+              control={form.control}
+              name="getEndpoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>GET Endpoint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="/items or /items/{id}" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="createEndpoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CREATE (POST) Endpoint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="/items" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="updateEndpoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>UPDATE (PUT/PATCH) Endpoint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="/items/{id}" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="deleteEndpoint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>DELETE Endpoint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="/items/{id}" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -220,6 +296,8 @@ export function SchemaBuilder() {
                   </Button>
                 </div>
               </div>
+
+              {renderApiEndpoints()}
 
               <Button type="submit" disabled={loading || !dbConfig} className="w-full sm:w-auto">
                 {loading ? <Loader2 className="animate-spin" /> : <Save />}

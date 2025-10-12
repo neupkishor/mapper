@@ -96,6 +96,7 @@ class QueryBuilder {
   private limitCount: number | null = null;
   private offsetCount: number | null = null;
   private sorting: any | null = null;
+  private apiSchema: any = null;
 
   constructor(collectionName: string) {
     this.collectionName = collectionName;
@@ -104,6 +105,14 @@ class QueryBuilder {
       this.db = getFirestoreInstance();
     } else {
       this.db = null;
+    }
+
+    if (config?.dbType === 'API') {
+        const schemasStr = localStorage.getItem('collectionSchemas');
+        if (schemasStr) {
+            const schemas = JSON.parse(schemasStr);
+            this.apiSchema = schemas[collectionName];
+        }
     }
   }
 
@@ -147,11 +156,13 @@ class QueryBuilder {
   }
 
    private async getApiDocuments(fields: string[]): Promise<DocumentData[]> {
-    if (!apiConfig) {
-      throw new Error('API is not configured.');
+    if (!apiConfig || !this.apiSchema?.getEndpoint) {
+      throw new Error('API is not configured or GET endpoint is missing in schema.');
     }
     
-    const { basePath, getEndpoint, apiKey } = apiConfig;
+    const { basePath, apiKey } = apiConfig;
+    const { getEndpoint } = this.apiSchema;
+
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (apiKey) {
       headers['Authorization'] = `Bearer ${apiKey}`;
@@ -263,8 +274,9 @@ class QueryBuilder {
             const docRef = await addDoc(collection(this.db, this.collectionName), data);
             return docRef.id;
         case 'API':
-             if (!apiConfig) throw new Error('API is not configured.');
-             const { basePath, createEndpoint, apiKey } = apiConfig;
+             if (!apiConfig || !this.apiSchema?.createEndpoint) throw new Error('API is not configured or CREATE endpoint is missing in schema.');
+             const { basePath, apiKey } = apiConfig;
+             const { createEndpoint } = this.apiSchema;
              const headers: Record<string, string> = { 'Content-Type': 'application/json' };
              if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
              
@@ -292,8 +304,9 @@ class QueryBuilder {
             await updateDoc(docRef, data);
             break;
         case 'API':
-             if (!apiConfig) throw new Error('API is not configured.');
-             const { basePath, updateEndpoint, apiKey } = apiConfig;
+             if (!apiConfig || !this.apiSchema?.updateEndpoint) throw new Error('API is not configured or UPDATE endpoint is missing in schema.');
+             const { basePath, apiKey } = apiConfig;
+             const { updateEndpoint } = this.apiSchema;
              const headers: Record<string, string> = { 'Content-Type': 'application/json' };
              if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
              
@@ -321,8 +334,10 @@ class QueryBuilder {
             await deleteDoc(doc(this.db, this.collectionName, docId));
             break;
         case 'API':
-             if (!apiConfig) throw new Error('API is not configured.');
-             const { basePath, deleteEndpoint, apiKey } = apiConfig;
+             if (!apiConfig || !this.apiSchema?.deleteEndpoint) throw new Error('API is not configured or DELETE endpoint is missing in schema.');
+             const { basePath, apiKey } = apiConfig;
+             const { deleteEndpoint } = this.apiSchema;
+
              const headers: Record<string, string> = {};
              if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
              
@@ -344,5 +359,3 @@ export const Database = {
     return new QueryBuilder(collectionName);
   }
 };
-
-    

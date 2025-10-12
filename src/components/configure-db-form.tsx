@@ -68,10 +68,6 @@ const sqlSchema = baseSchema.extend({
 const apiSchema = baseSchema.extend({
     basePath: z.string().url("Must be a valid URL."),
     apiKey: z.string().optional(),
-    getEndpoint: z.string().min(1, "GET endpoint is required."),
-    createEndpoint: z.string().min(1, "CREATE endpoint is required."),
-    updateEndpoint: z.string().min(1, "UPDATE endpoint is required."),
-    deleteEndpoint: z.string().min(1, "DELETE endpoint is required."),
 });
 
 
@@ -339,59 +335,6 @@ export function ConfigureDBForm() {
                 </FormItem>
               )}
             />
-            <h3 className="text-lg font-medium pt-4">Endpoints</h3>
-            <FormField
-              control={form.control}
-              name="getEndpoint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>GET Endpoint</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/items or /items/{id}" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="createEndpoint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CREATE (POST) Endpoint</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/items" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="updateEndpoint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>UPDATE (PUT/PATCH) Endpoint</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/items/{id}" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="deleteEndpoint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>DELETE Endpoint</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/items/{id}" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </>
         );
       default:
@@ -453,5 +396,3 @@ export function ConfigureDBForm() {
     </div>
   );
 }
-
-    
