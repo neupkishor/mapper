@@ -48,9 +48,12 @@ const mongoSchema = baseSchema.extend({
 });
 
 const firestoreSchema = baseSchema.extend({
+  apiKey: z.string().min(1, "API Key is required."),
+  authDomain: z.string().min(1, "Auth Domain is required."),
   projectId: z.string().min(1, "Project ID is required."),
-  clientEmail: z.string().email("Invalid email format."),
-  privateKey: z.string().min(1, "Private key is required."),
+  storageBucket: z.string().min(1, "Storage Bucket is required."),
+  messagingSenderId: z.string().min(1, "Messaging Sender ID is required."),
+  appId: z.string().min(1, "App ID is required."),
 });
 
 const sqlSchema = baseSchema.extend({
@@ -147,38 +150,77 @@ export function ConfigureDBForm() {
           <>
             <FormField
               control={form.control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Key</FormLabel>
+                  <FormControl>
+                    <Input placeholder="AIza..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="authDomain"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Auth Domain</FormLabel>
+                  <FormControl>
+                    <Input placeholder="your-project-id.firebaseapp.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="projectId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Project ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="your-firebase-project-id" {...field} />
+                    <Input placeholder="your-project-id" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
+             <FormField
               control={form.control}
-              name="clientEmail"
+              name="storageBucket"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client Email</FormLabel>
+                  <FormLabel>Storage Bucket</FormLabel>
                   <FormControl>
-                    <Input placeholder="firebase-adminsdk-..." {...field} />
+                    <Input placeholder="your-project-id.appspot.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
+             <FormField
               control={form.control}
-              name="privateKey"
+              name="messagingSenderId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Private Key</FormLabel>
+                  <FormLabel>Messaging Sender ID</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="-----BEGIN PRIVATE KEY-----" {...field} />
+                    <Input placeholder="1234567890" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="appId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>App ID</FormLabel>
+                  <FormControl>
+                    <Input placeholder="1:1234567890:web:..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
