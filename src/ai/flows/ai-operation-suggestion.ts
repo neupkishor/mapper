@@ -40,7 +40,7 @@ const aiOperationSuggestionPrompt = ai.definePrompt({
   name: 'aiOperationSuggestionPrompt',
   input: {schema: AIOperationSuggestionInputSchema},
   output: {schema: AIOperationSuggestionOutputSchema},
-  prompt: `You are an expert database engineer. Given a description of a database operation, a database type, and a data schema, you will generate the code to perform that operation.
+  prompt: `You are an expert database engineer. Given a description of a database operation, a database type, and a data schema, you will generate the code to perform that operation. The operation can be for inserting, fetching, or updating data.
 
 Operation Description: {{{operationDescription}}}
 Database Type: {{{databaseType}}}

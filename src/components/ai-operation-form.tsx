@@ -76,7 +76,6 @@ export function AIOperationForm() {
     setResult(null);
     try {
       // For this step, we'll need a schema. Let's try to get it from the schema-builder page, or use a placeholder.
-      // Since we don't have a direct link, we'll use a placeholder schema.
       // A more advanced version would fetch the schema generated in the first step.
       const schemaResult = localStorage.getItem("lastSchema");
       const schema = schemaResult
@@ -130,7 +129,7 @@ export function AIOperationForm() {
                     <FormLabel>Operation Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., 'Insert a new user with a name and email' or 'Find all users who have registered in the last 7 days'"
+                        placeholder="e.g., 'Insert a new user with a name and email', 'Find all users who registered in the last 7 days', or 'Update a product price by its ID'"
                         className="min-h-[120px] resize-y"
                         {...field}
                       />
@@ -177,7 +176,7 @@ export function AIOperationForm() {
             <Tabs defaultValue="code">
               <TabsList className="grid w-full grid-cols-2 sm:w-96">
                 <TabsTrigger value="code">Code</TabsTrigger>
-                <TabsTrigger value="rationale">Rationale</TabsTrigger>
+                <TabsTrigger value="Rationale">Rationale</TabsTrigger>
               </TabsList>
               <TabsContent value="code" className="mt-4">
                 <div className="rounded-lg border bg-card-foreground/5">
@@ -186,7 +185,7 @@ export function AIOperationForm() {
                   </pre>
                 </div>
               </TabsContent>
-              <TabsContent value="rationale" className="mt-4">
+              <TabsContent value="Rationale" className="mt-4">
                 <div className="prose prose-sm prose-invert max-w-none rounded-lg border bg-transparent p-4 text-sm">
                   <p>{result.rationale}</p>
                 </div>
