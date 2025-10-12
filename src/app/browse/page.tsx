@@ -10,6 +10,13 @@ import { Loader2, Search, PlusCircle, XCircle } from 'lucide-react';
 import { Database } from '@/lib/orm';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
 
 type WhereClause = {
   field: string;
@@ -230,27 +237,27 @@ export default function BrowsePage() {
                         <p>{error}</p>
                     </div>
                 ) : documents.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Accordion type="single" collapsible className="w-full">
                     {documents.map((doc, index) => (
-                      <Card key={doc.id || index}>
-                          <CardHeader>
-                              <CardTitle className="text-lg truncate">{doc.id || `Document ${index + 1}`}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2 text-sm">
+                      <AccordionItem key={doc.id || index} value={`item-${index}`}>
+                        <AccordionTrigger>
+                            <span className="font-mono text-sm">{doc.id || `Document ${index + 1}`}</span>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           <div className="space-y-3 text-sm p-2">
                                 {Object.entries(doc).map(([key, value]) => (
-                                    <div key={key} className="flex justify-between items-start gap-4">
+                                    <div key={key} className="flex flex-col gap-1">
                                         <span className="font-semibold text-muted-foreground">{key}</span>
-                                        <span className="text-foreground break-words text-right">
-                                            {typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}
+                                        <span className="font-mono text-foreground break-words bg-muted/50 p-2 rounded">
+                                            {typeof value === 'object' && value !== null ? JSON.stringify(value, null, 2) : String(value)}
                                         </span>
                                     </div>
                                 ))}
                             </div>
-                          </CardContent>
-                      </Card>
+                        </AccordionContent>
+                      </AccordionItem>
                     ))}
-                  </div>
+                  </Accordion>
                 ) : (
                   <p className="text-muted-foreground text-center py-10">
                     No documents to display.
