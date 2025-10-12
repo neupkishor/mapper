@@ -42,44 +42,38 @@ export default function BrowsePage() {
 
   return (
     <MainLayout>
-      <div>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
-          <h1 className="font-headline text-xl font-bold tracking-tight sm:text-2xl">
-            Data Browser
-          </h1>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-6xl space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Select an Operation</CardTitle>
-                <CardDescription>
-                  Choose the database operation you want to perform.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup
-                  value={operation}
-                  onValueChange={(value: Operation) => setOperation(value)}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
-                >
-                  {operationOptions.map(({ value, label, icon }) => (
-                    <Label key={value} htmlFor={`op-${value}`} className="cursor-pointer">
-                      <div className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-colors hover:bg-accent hover:text-accent-foreground ${operation === value ? 'border-primary bg-primary/10' : 'border-muted'}`}>
-                        {icon}
-                        <span className="mt-2 font-medium">{label}</span>
-                        <RadioGroupItem value={value} id={`op-${value}`} className="sr-only" />
-                      </div>
-                    </Label>
-                  ))}
-                </RadioGroup>
-              </CardContent>
-            </Card>
+      <div className="space-y-8">
+        <h1 className="font-headline text-2xl font-bold tracking-tight sm:text-3xl">
+          Data Browser
+        </h1>
+        <Card>
+          <CardHeader>
+            <CardTitle>Select an Operation</CardTitle>
+            <CardDescription>
+              Choose the database operation you want to perform.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={operation}
+              onValueChange={(value: Operation) => setOperation(value)}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+            >
+              {operationOptions.map(({ value, label, icon }) => (
+                <Label key={value} htmlFor={`op-${value}`} className="cursor-pointer">
+                  <div className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-colors hover:bg-accent hover:text-accent-foreground ${operation === value ? 'border-primary bg-primary/10' : 'border-muted'}`}>
+                    {icon}
+                    <span className="mt-2 font-medium">{label}</span>
+                    <RadioGroupItem value={value} id={`op-${value}`} className="sr-only" />
+                  </div>
+                </Label>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
 
-            {renderForm()}
-            
-          </div>
-        </main>
+        {renderForm()}
+        
       </div>
     </MainLayout>
   );
