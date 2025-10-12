@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Trash2, Play, Wand2 } from 'lucide-react';
-import { Database } from '@/lib/orm';
+import { Database } from '@/lib/orm/query-builder';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -39,7 +39,7 @@ export function DeleteForm() {
   const handleDeleteDocument = async () => {
     setLoading(true);
     try {
-        await Database.collection(collectionName).delete(docId);
+        await new Database().collection(collectionName).delete(docId);
         toast({ title: "Document Deleted", description: "The document has been deleted successfully." });
         setDocId('');
         setGeneratedCode(null);

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Pencil, Play, Wand2 } from 'lucide-react';
-import { Database } from '@/lib/orm';
+import { Database } from '@/lib/orm/query-builder';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -30,7 +30,7 @@ export function UpdateForm() {
     try {
         // Validate JSON
         JSON.parse(updateContent);
-        const code = `Database.collection('${collectionName}').update('${docId}', ${updateContent});`;
+        const code = `new Database().collection('${collectionName}').update('${docId}', ${updateContent});`;
         setGeneratedCode(code);
     } catch(e) {
         toast({ variant: "destructive", title: "Invalid JSON format", description: "Please check the update JSON content." });
@@ -42,7 +42,7 @@ export function UpdateForm() {
     try {
         const docData = JSON.parse(updateContent);
         setLoading(true);
-        await Database.collection(collectionName).update(docId, docData);
+        await new Database().collection(collectionName).update(docId, docData);
         toast({ title: "Document Updated", description: "The document has been updated successfully." });
         setGeneratedCode(null);
     } catch (e: any) {

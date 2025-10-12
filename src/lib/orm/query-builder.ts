@@ -3,6 +3,12 @@
 import { DocumentData } from 'firebase/firestore';
 import { getDocuments, addDocument, updateDocument, deleteDocument } from '@/app/actions';
 
+export class Database {
+    collection(collectionName: string): QueryBuilder {
+        return new QueryBuilder(collectionName);
+    }
+}
+
 export class QueryBuilder {
   private collectionName: string;
   private filters: any[] = [];
