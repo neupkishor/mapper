@@ -6,7 +6,7 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, PlusCircle, XCircle } from 'lucide-react';
+import { Loader2, Search, PlusCircle, XCircle, Pencil, Trash2, FilePlus2 } from 'lucide-react';
 import { Database } from '@/lib/orm';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +16,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from '@/components/ui/textarea';
 
 
 type WhereClause = {
@@ -41,6 +52,13 @@ export default function BrowsePage() {
   const [offset, setOffset] = useState<number | null>(null);
   const [whereClauses, setWhereClauses] = useState<WhereClause[]>([]);
   const [sortBy, setSortBy] = useState<SortBy | null>(null);
+  
+  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newDocContent, setNewDocContent] = useState('');
+
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<any>(null);
+  const [editingDocContent, setEditingDocContent] = useState('');
 
   const handleFetch = async () => {
     if (!collectionName) {
@@ -114,6 +132,68 @@ export default function BrowsePage() {
     setWhereClauses(whereClauses.filter((_, i) => i !== index));
   };
 
+  const handleCreateDocument = async () => {
+    if (!collectionName) {
+        toast({ variant: "destructive", title: "Collection name is missing." });
+        return;
+    }
+    try {
+        const docData = JSON.parse(newDocContent);
+        setLoading(true);
+        await Database.collection(collectionName).add(docData);
+        toast({ title: "Document Created", description: "The new document has been added successfully." });
+        setCreateDialogOpen(false);
+        setNewDocContent('');
+        await handleFetch(); // Refresh list
+    } catch (e: any) {
+        console.error("Create error:", e);
+        toast({ variant: "destructive", title: "Failed to create document", description: e.message });
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const openEditDialog = (doc: any) => {
+    setEditingDoc(doc);
+    const { id, ...data } = doc;
+    setEditingDocContent(JSON.stringify(data, null, 2));
+    setEditDialogOpen(true);
+  };
+  
+  const handleUpdateDocument = async () => {
+    if (!collectionName || !editingDoc?.id) return;
+    try {
+      const docData = JSON.parse(editingDocContent);
+      setLoading(true);
+      await Database.collection(collectionName).update(editingDoc.id, docData);
+      toast({ title: "Document Updated", description: "The document has been updated successfully." });
+      setEditDialogOpen(false);
+      await handleFetch(); // Refresh list
+    } catch (e: any) {
+      console.error("Update error:", e);
+      toast({ variant: "destructive", title: "Failed to update document", description: e.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!collectionName || !docId) return;
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+        return;
+    }
+    try {
+        setLoading(true);
+        await Database.collection(collectionName).delete(docId);
+        toast({ title: "Document Deleted", description: "The document has been deleted successfully." });
+        await handleFetch(); // Refresh list
+    } catch (e: any) {
+        console.error("Delete error:", e);
+        toast({ variant: "destructive", title: "Failed to delete document", description: e.message });
+    } finally {
+        setLoading(false);
+    }
+  };
 
   return (
     <MainLayout>
@@ -207,15 +287,37 @@ export default function BrowsePage() {
                     </div>
                 </div>
 
-                <Button type="submit" onClick={handleFetch} disabled={loading || !collectionName}>
-                    {loading ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      <Search />
-                    )}
-                    <span>Fetch Documents</span>
-                </Button>
-
+                <div className="flex flex-wrap gap-2 pt-4">
+                  <Button type="submit" onClick={handleFetch} disabled={loading || !collectionName}>
+                      {loading ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Search />
+                      )}
+                      <span>Fetch Documents</span>
+                  </Button>
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" disabled={!collectionName}><FilePlus2/>Create New Document</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Document in '{collectionName}'</DialogTitle>
+                        <DialogDescription>Enter the JSON for the new document below.</DialogDescription>
+                      </DialogHeader>
+                      <Textarea 
+                        placeholder='{ "name": "John Doe", "age": 30 }' 
+                        className="min-h-[200px] font-code"
+                        value={newDocContent}
+                        onChange={(e) => setNewDocContent(e.target.value)}
+                      />
+                      <DialogFooter>
+                        <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                        <Button onClick={handleCreateDocument} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : "Create"}</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardContent>
             </Card>
 
@@ -227,7 +329,7 @@ export default function BrowsePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {loading && documents.length === 0 ? (
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
@@ -245,6 +347,10 @@ export default function BrowsePage() {
                         </AccordionTrigger>
                         <AccordionContent>
                            <div className="space-y-3 text-sm p-2">
+                                <div className="flex gap-2 justify-end">
+                                    <Button size="sm" variant="outline" onClick={() => openEditDialog(doc)}><Pencil className="mr-2 h-4 w-4" /> Edit</Button>
+                                    <Button size="sm" variant="destructive" onClick={() => handleDeleteDocument(doc.id)}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
+                                </div>
                                 {Object.entries(doc).map(([key, value]) => (
                                     <div key={key} className="flex flex-col gap-1">
                                         <span className="font-semibold text-muted-foreground">{key}</span>
@@ -265,9 +371,30 @@ export default function BrowsePage() {
                 )}
               </CardContent>
             </Card>
+
+            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Document</DialogTitle>
+                  <DialogDescription>ID: <span className="font-mono">{editingDoc?.id}</span></DialogDescription>
+                </DialogHeader>
+                <Textarea 
+                  className="min-h-[300px] font-code"
+                  value={editingDocContent}
+                  onChange={(e) => setEditingDocContent(e.target.value)}
+                />
+                <DialogFooter>
+                  <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                  <Button onClick={handleUpdateDocument} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
           </div>
         </main>
       </div>
     </MainLayout>
   );
 }
+
+    
