@@ -4,196 +4,41 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2, Search, PlusCircle, XCircle, Pencil, Trash2, FilePlus2 } from 'lucide-react';
-import { Database } from '@/lib/orm';
-import { useToast } from '@/hooks/use-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { GetForm } from '@/components/browse/get-form';
+import { CreateForm } from '@/components/browse/create-form';
+import { UpdateForm } from '@/components/browse/update-form';
+import { DeleteForm } from '@/components/browse/delete-form';
+import { Database, FilePlus2, Pencil, Trash2 } from 'lucide-react';
 
 
-type WhereClause = {
-  field: string;
-  operator: '==' | '<' | '>' | '<=' | '>=' | '!=';
-  value: string;
-};
-
-type SortBy = {
-  field: string;
-  direction: 'asc' | 'desc';
-};
+type Operation = 'get' | 'create' | 'update' | 'delete';
 
 export default function BrowsePage() {
-  const [collectionName, setCollectionName] = useState('');
-  const [fields, setFields] = useState('');
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [operation, setOperation] = useState<Operation>('get');
 
-  const [limit, setLimit] = useState<number | null>(null);
-  const [offset, setOffset] = useState<number | null>(null);
-  const [whereClauses, setWhereClauses] = useState<WhereClause[]>([]);
-  const [sortBy, setSortBy] = useState<SortBy | null>(null);
-  
-  const [isCreateDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newDocContent, setNewDocContent] = useState('');
-
-  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingDoc, setEditingDoc] = useState<any>(null);
-  const [editingDocContent, setEditingDocContent] = useState('');
-
-  const handleFetch = async () => {
-    if (!collectionName) {
-      toast({
-        variant: 'destructive',
-        title: 'Collection Name Required',
-        description: 'Please enter a collection name to fetch documents.',
-      });
-      return;
+  const renderForm = () => {
+    switch (operation) {
+      case 'get':
+        return <GetForm />;
+      case 'create':
+        return <CreateForm />;
+      case 'update':
+        return <UpdateForm />;
+      case 'delete':
+        return <DeleteForm />;
+      default:
+        return <GetForm />;
     }
-    setLoading(true);
-    setError(null);
-    setDocuments([]);
-    try {
-      let query = Database.collection(collectionName);
-      
-      whereClauses.forEach(clause => {
-        if (clause.field && clause.value) {
-            const numericValue = Number(clause.value);
-            const valueToUse = isNaN(numericValue) ? clause.value : numericValue;
-            query = query.where(clause.field, clause.operator, valueToUse);
-        }
-      });
+  }
 
-      if (sortBy && sortBy.field) {
-        query = query.sortBy(sortBy.field, sortBy.direction);
-      }
-
-      if (limit !== null && limit > 0) {
-        query = query.limit(limit);
-      }
-      
-      if (offset !== null && offset >= 0) {
-        query = query.offset(offset);
-      }
-
-      const fieldsToFetch = fields.split(',').map(f => f.trim()).filter(f => f);
-      const docs = await query.getDocuments(...fieldsToFetch);
-
-      setDocuments(docs);
-      if (docs.length === 0) {
-        toast({
-            title: 'No Documents Found',
-            description: `Your query on '${collectionName}' returned no results.`,
-        });
-      }
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message);
-      toast({
-        variant: 'destructive',
-        title: 'An Error Occurred',
-        description: e.message || 'Failed to fetch documents.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const addWhereClause = () => {
-    setWhereClauses([...whereClauses, { field: '', operator: '==', value: '' }]);
-  };
-
-  const updateWhereClause = (index: number, part: Partial<WhereClause>) => {
-    const newClauses = [...whereClauses];
-    newClauses[index] = { ...newClauses[index], ...part };
-    setWhereClauses(newClauses);
-  };
-  
-  const removeWhereClause = (index: number) => {
-    setWhereClauses(whereClauses.filter((_, i) => i !== index));
-  };
-
-  const handleCreateDocument = async () => {
-    if (!collectionName) {
-        toast({ variant: "destructive", title: "Collection name is missing." });
-        return;
-    }
-    try {
-        const docData = JSON.parse(newDocContent);
-        setLoading(true);
-        await Database.collection(collectionName).add(docData);
-        toast({ title: "Document Created", description: "The new document has been added successfully." });
-        setCreateDialogOpen(false);
-        setNewDocContent('');
-        await handleFetch(); // Refresh list
-    } catch (e: any) {
-        console.error("Create error:", e);
-        toast({ variant: "destructive", title: "Failed to create document", description: e.message });
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  const openEditDialog = (doc: any) => {
-    setEditingDoc(doc);
-    const { id, ...data } = doc;
-    setEditingDocContent(JSON.stringify(data, null, 2));
-    setEditDialogOpen(true);
-  };
-  
-  const handleUpdateDocument = async () => {
-    if (!collectionName || !editingDoc?.id) return;
-    try {
-      const docData = JSON.parse(editingDocContent);
-      setLoading(true);
-      await Database.collection(collectionName).update(editingDoc.id, docData);
-      toast({ title: "Document Updated", description: "The document has been updated successfully." });
-      setEditDialogOpen(false);
-      await handleFetch(); // Refresh list
-    } catch (e: any) {
-      console.error("Update error:", e);
-      toast({ variant: "destructive", title: "Failed to update document", description: e.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteDocument = async (docId: string) => {
-    if (!collectionName || !docId) return;
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-        return;
-    }
-    try {
-        setLoading(true);
-        await Database.collection(collectionName).delete(docId);
-        toast({ title: "Document Deleted", description: "The document has been deleted successfully." });
-        await handleFetch(); // Refresh list
-    } catch (e: any) {
-        console.error("Delete error:", e);
-        toast({ variant: "destructive", title: "Failed to delete document", description: e.message });
-    } finally {
-        setLoading(false);
-    }
-  };
+  const operationOptions = [
+    { value: 'get', label: 'Get Documents', icon: <Database /> },
+    { value: 'create', label: 'Create Document', icon: <FilePlus2 /> },
+    { value: 'update', label: 'Update Document', icon: <Pencil /> },
+    { value: 'delete', label: 'Delete Document', icon: <Trash2 /> },
+  ];
 
   return (
     <MainLayout>
@@ -207,194 +52,35 @@ export default function BrowsePage() {
           <div className="mx-auto max-w-6xl space-y-8">
             <Card>
               <CardHeader>
-                <CardTitle>Build Your Query</CardTitle>
+                <CardTitle>Select an Operation</CardTitle>
                 <CardDescription>
-                  Enter a collection name and add conditions to build your database query.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col space-y-2">
-                        <label htmlFor="collection-name" className="text-sm font-medium">Collection Name</label>
-                        <Input
-                            id="collection-name"
-                            type="text"
-                            placeholder="e.g., users"
-                            value={collectionName}
-                            onChange={(e) => setCollectionName(e.target.value)}
-                        />
-                    </div>
-                     <div className="flex flex-col space-y-2">
-                        <label htmlFor="fields" className="text-sm font-medium">Fields (comma-separated)</label>
-                        <Input
-                            id="fields"
-                            type="text"
-                            placeholder="e.g., name, email (optional)"
-                            value={fields}
-                            onChange={(e) => setFields(e.target.value)}
-                        />
-                    </div>
-                </div>
-                
-                {/* Query Parameters */}
-                <div className="space-y-4 pt-4">
-                    <CardTitle className="text-lg">Query Parameters</CardTitle>
-                    {/* Where Clauses */}
-                    <div className="space-y-2">
-                        {whereClauses.map((clause, index) => (
-                        <div key={index} className="flex flex-wrap items-center gap-2 p-2 border rounded-lg">
-                            <Input placeholder="Field" value={clause.field} onChange={e => updateWhereClause(index, { field: e.target.value })} className="w-full sm:w-1/3"/>
-                            <Select value={clause.operator} onValueChange={(op: WhereClause['operator']) => updateWhereClause(index, { operator: op })}>
-                                <SelectTrigger className="w-full sm:w-auto">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="==">==</SelectItem>
-                                    <SelectItem value="!=">!=</SelectItem>
-                                    <SelectItem value=">">&gt;</SelectItem>
-                                    <SelectItem value="<">&lt;</SelectItem>
-                                    <SelectItem value=">=">&gt;=</SelectItem>
-                                    <SelectItem value="<=">&lt;=</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Input placeholder="Value" value={clause.value} onChange={e => updateWhereClause(index, { value: e.target.value })} className="w-full sm:w-1/3" />
-                            <Button variant="ghost" size="icon" onClick={() => removeWhereClause(index)}>
-                                <XCircle className="text-destructive" />
-                            </Button>
-                        </div>
-                        ))}
-                        <Button variant="outline" size="sm" onClick={addWhereClause}><PlusCircle/> Add Condition</Button>
-                    </div>
-                    
-                    {/* Sort By */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Input placeholder="Sort by Field" value={sortBy?.field || ''} onChange={e => setSortBy({ ...sortBy, field: e.target.value, direction: sortBy?.direction || 'asc'})} className="w-full sm:w-1/2"/>
-                        <Select value={sortBy?.direction || 'asc'} onValueChange={(dir: 'asc' | 'desc') => setSortBy({ ...sortBy, field: sortBy?.field || '', direction: dir })}>
-                            <SelectTrigger className="w-full sm:w-auto">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="asc">Ascending</SelectItem>
-                                <SelectItem value="desc">Descending</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Limit and Offset */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Input type="number" placeholder="Limit" onChange={e => setLimit(e.target.value ? Number(e.target.value) : null)} className="w-full sm:w-1/4"/>
-                        <Input type="number" placeholder="Offset" onChange={e => setOffset(e.target.value ? Number(e.target.value) : null)} className="w-full sm:w-1/4"/>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-4">
-                  <Button type="submit" onClick={handleFetch} disabled={loading || !collectionName}>
-                      {loading ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        <Search />
-                      )}
-                      <span>Fetch Documents</span>
-                  </Button>
-                  <Dialog open={isCreateDialogOpen} onOpenChange={setCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" disabled={!collectionName}><FilePlus2/>Create New Document</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Create New Document in '{collectionName}'</DialogTitle>
-                        <DialogDescription>Enter the JSON for the new document below.</DialogDescription>
-                      </DialogHeader>
-                      <Textarea 
-                        placeholder='{ "name": "John Doe", "age": 30 }' 
-                        className="min-h-[200px] font-code"
-                        value={newDocContent}
-                        onChange={(e) => setNewDocContent(e.target.value)}
-                      />
-                      <DialogFooter>
-                        <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
-                        <Button onClick={handleCreateDocument} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : "Create"}</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Results</CardTitle>
-                 <CardDescription>
-                  {collectionName ? `Documents from the '${collectionName}' collection.` : 'Your query results will appear here.'}
+                  Choose the database operation you want to perform.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {loading && documents.length === 0 ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
-                ) : error ? (
-                    <div className="text-destructive-foreground bg-destructive/90 p-4 rounded-md">
-                        <p className="font-bold">Error:</p>
-                        <p>{error}</p>
-                    </div>
-                ) : documents.length > 0 ? (
-                  <Accordion type="single" collapsible className="w-full">
-                    {documents.map((doc, index) => (
-                      <AccordionItem key={doc.id || index} value={`item-${index}`}>
-                        <AccordionTrigger>
-                            <span className="font-mono text-sm">{doc.id || `Document ${index + 1}`}</span>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                           <div className="space-y-3 text-sm p-2">
-                                <div className="flex gap-2 justify-end">
-                                    <Button size="sm" variant="outline" onClick={() => openEditDialog(doc)}><Pencil className="mr-2 h-4 w-4" /> Edit</Button>
-                                    <Button size="sm" variant="destructive" onClick={() => handleDeleteDocument(doc.id)}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
-                                </div>
-                                {Object.entries(doc).map(([key, value]) => (
-                                    <div key={key} className="flex flex-col gap-1">
-                                        <span className="font-semibold text-muted-foreground">{key}</span>
-                                        <span className="font-mono text-foreground break-words bg-muted/50 p-2 rounded">
-                                            {typeof value === 'object' && value !== null ? JSON.stringify(value, null, 2) : String(value)}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                ) : (
-                  <p className="text-muted-foreground text-center py-10">
-                    No documents to display.
-                  </p>
-                )}
+                <RadioGroup
+                  value={operation}
+                  onValueChange={(value: Operation) => setOperation(value)}
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+                >
+                  {operationOptions.map(({ value, label, icon }) => (
+                    <Label key={value} htmlFor={`op-${value}`} className="cursor-pointer">
+                      <div className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 transition-colors hover:bg-accent hover:text-accent-foreground ${operation === value ? 'border-primary bg-primary/10' : 'border-muted'}`}>
+                        {icon}
+                        <span className="mt-2 font-medium">{label}</span>
+                        <RadioGroupItem value={value} id={`op-${value}`} className="sr-only" />
+                      </div>
+                    </Label>
+                  ))}
+                </RadioGroup>
               </CardContent>
             </Card>
 
-            <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Document</DialogTitle>
-                  <DialogDescription>ID: <span className="font-mono">{editingDoc?.id}</span></DialogDescription>
-                </DialogHeader>
-                <Textarea 
-                  className="min-h-[300px] font-code"
-                  value={editingDocContent}
-                  onChange={(e) => setEditingDocContent(e.target.value)}
-                />
-                <DialogFooter>
-                  <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
-                  <Button onClick={handleUpdateDocument} disabled={loading}>{loading ? <Loader2 className="animate-spin" /> : "Save Changes"}</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
+            {renderForm()}
+            
           </div>
         </main>
       </div>
     </MainLayout>
   );
 }
-
-    
