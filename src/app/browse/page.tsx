@@ -224,11 +224,11 @@ export default function BrowsePage() {
                               <CardTitle className="text-lg truncate">{doc.id || `Document ${index + 1}`}</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="space-y-3 text-sm">
+                            <div className="space-y-2 text-sm">
                                 {Object.entries(doc).map(([key, value]) => (
-                                    <div key={key} className="flex flex-col">
+                                    <div key={key} className="flex justify-between items-start gap-4">
                                         <span className="font-semibold text-muted-foreground">{key}</span>
-                                        <span className="text-foreground break-words">
+                                        <span className="text-foreground break-words text-right">
                                             {typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}
                                         </span>
                                     </div>
