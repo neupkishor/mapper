@@ -1,4 +1,4 @@
-# Firebase Studio
+# Neup.Mapper
 
 This is a NextJS starter in Firebase Studio.
 
