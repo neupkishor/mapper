@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Neup.ORM',
+  title: 'Neup.Mapper',
   description: 'Unified ORM with AI-powered schema suggestions',
 };
 

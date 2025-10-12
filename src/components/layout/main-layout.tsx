@@ -21,7 +21,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="border-b">
           <Link href="/" className="flex items-center gap-2">
             <Icons.logo className="h-6 w-6 text-primary" />
-            <h1 className="font-headline text-xl font-semibold">Neup.ORM</h1>
+            <h1 className="font-headline text-xl font-semibold">Neup.Mapper</h1>
           </Link>
         </SidebarHeader>
         <SidebarContent>
