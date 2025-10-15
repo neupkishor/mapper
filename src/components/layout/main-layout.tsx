@@ -83,21 +83,20 @@ export function MainLayout({ children }: { children: ReactNode }) {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'scroll';
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'scroll';
     };
   }, [isMobileMenuOpen]);
 
   return (
-    <div className="flex h-screen w-full flex-col bg-background overflow-hidden">
       <Collapsible
         asChild
         open={isMobileMenuOpen}
         onOpenChange={setIsMobileMenuOpen}
       >
-        <div className="relative w-full">
+        <div className="relative w-full min-h-screen">
           <header className="sticky top-0 z-20 w-full border-b bg-background/80 backdrop-blur-sm">
             <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6">
               <div className="flex items-center gap-4 md:gap-8">
@@ -140,18 +139,15 @@ export function MainLayout({ children }: { children: ReactNode }) {
             </div>
           </CollapsibleContent>
 
-          <div className="flex flex-1 h-[calc(100vh-4rem)]">
-            <div className="mx-auto flex w-full max-w-[1440px]">
-              <AppSidebar />
-              <main className="flex-1 overflow-y-auto">
-                <div className="p-4 sm:p-6 md:p-8">
-                  {children}
-                </div>
-              </main>
-            </div>
+          <div className="mx-auto flex w-full max-w-[1440px]">
+            <AppSidebar />
+            <main className="flex-1">
+              <div className="p-4 sm:p-6 md:p-8">
+                {children}
+              </div>
+            </main>
           </div>
         </div>
       </Collapsible>
-    </div>
   );
 }
