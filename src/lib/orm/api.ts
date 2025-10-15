@@ -12,11 +12,28 @@ interface QueryOptions {
   fields: string[];
 }
 
-function getApiSchema(collectionName: string) {
-    // This is problematic on the server. Schemas are in localStorage.
-    // For a server-centric approach, schemas would need to be stored in a file or database.
-    // For now, we will bypass this on the server.
-    return null;
+function getHeaders(): Record<string, string> {
+  const apiConfig = getDbConfig();
+  if (!apiConfig || apiConfig.dbType !== 'API') {
+    throw new Error('API is not configured.');
+  }
+
+  const { apiKey, headers: globalHeaders } = apiConfig;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  if (apiKey) {
+    headers['Authorization'] = apiKey.startsWith('Bearer ') ? apiKey : `Bearer ${apiKey}`;
+  }
+
+  if (globalHeaders && Array.isArray(globalHeaders)) {
+    globalHeaders.forEach(header => {
+      if (header.key && header.value) {
+        headers[header.key] = header.value;
+      }
+    });
+  }
+  
+  return headers;
 }
 
 export async function getDocuments(options: QueryOptions): Promise<DocumentData[]> {
@@ -24,20 +41,13 @@ export async function getDocuments(options: QueryOptions): Promise<DocumentData[
   const apiConfig = getDbConfig();
 
   if (!apiConfig || apiConfig.dbType !== 'API') {
-    throw new Error('API is not configured or GET endpoint is missing in schema.');
+    throw new Error('API is not configured.');
   }
 
-  const { basePath, apiKey } = apiConfig;
-  // Since we can't access localStorage on the server, we'll have to make an assumption
-  // or require the endpoint to be part of the environment variables.
-  // Let's assume a convention for now: /<collectionName>
+  const { basePath } = apiConfig;
   const getEndpoint = `/${collectionName}`;
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`;
-  }
-  
+  const headers = getHeaders();
   const url = new URL(`${basePath}${getEndpoint}`);
 
   filters.forEach(f => url.searchParams.append(f.field, f.value));
@@ -57,7 +67,8 @@ export async function getDocuments(options: QueryOptions): Promise<DocumentData[
 
   const response = await fetch(url.toString(), { headers });
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.statusText}`);
+    const errorBody = await response.text();
+    throw new Error(`API request failed: ${response.statusText}. Body: ${errorBody}`);
   }
 
   let data = await response.json();
@@ -81,20 +92,22 @@ export async function addDocument(collectionName: string, data: DocumentData): P
     const apiConfig = getDbConfig();
     
     if (!apiConfig || apiConfig.dbType !== 'API') {
-        throw new Error('API is not configured or CREATE endpoint is missing in schema.');
+        throw new Error('API is not configured.');
     }
     
-    const { basePath, apiKey } = apiConfig;
+    const { basePath } = apiConfig;
     const createEndpoint = `/${collectionName}`;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+    const headers = getHeaders();
     
     const response = await fetch(`${basePath}${createEndpoint}`, {
        method: 'POST',
        headers,
        body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error(`API create failed: ${response.statusText}`);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`API create failed: ${response.statusText}. Body: ${errorBody}`);
+    }
     const result = await response.json();
     return result.id;
 }
@@ -102,14 +115,13 @@ export async function addDocument(collectionName: string, data: DocumentData): P
 export async function updateDocument(collectionName: string, docId: string, data: DocumentData): Promise<void> {
     const apiConfig = getDbConfig();
     
-    if (!apiConfig || apiConfig.dbType !== 'API') {
-        throw new Error('API is not configured or UPDATE endpoint is missing in schema.');
+    if (!apiagileConfig || apiConfig.dbType !== 'API') {
+        throw new Error('API is not configured.');
     }
     
-    const { basePath, apiKey } = apiConfig;
+    const { basePath } = apiConfig;
     const updateEndpoint = `/${collectionName}/{id}`;
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+    const headers = getHeaders();
     
     const url = `${basePath}${updateEndpoint.replace('{id}', docId)}`;
     
@@ -118,24 +130,30 @@ export async function updateDocument(collectionName: string, docId: string, data
        headers,
        body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error(`API update failed: ${response.statusText}`);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`API update failed: ${response.statusText}. Body: ${errorBody}`);
+    }
 }
 
 export async function deleteDocument(collectionName: string, docId: string): Promise<void> {
     const apiConfig = getDbConfig();
 
     if (!apiConfig || apiConfig.dbType !== 'API') {
-        throw new Error('API is not configured or DELETE endpoint is missing in schema.');
+        throw new Error('API is not configured.');
     }
     
-    const { basePath, apiKey } = apiConfig;
+    const { basePath } = apiConfig;
     const deleteEndpoint = `/${collectionName}/{id}`;
-
-    const headers: Record<string, string> = {};
-    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+    const headers = getHeaders();
     
     const url = `${basePath}${deleteEndpoint.replace('{id}', docId)}`;
     
     const response = await fetch(url, { method: 'DELETE', headers });
-    if (!response.ok) throw new Error(`API delete failed: ${response.statusText}`);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`API delete failed: ${response.statusText}. Body: ${errorBody}`);
+    }
 }
+
+    

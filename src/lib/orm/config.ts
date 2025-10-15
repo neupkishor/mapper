@@ -39,10 +39,19 @@ export function getDbConfig(): DbConfig | null {
       };
       break;
     case 'API':
+      const headers = [];
+      for (let i = 1; i <= 3; i++) {
+        const key = process.env[`API_HEADER_${i}_KEY`];
+        const value = process.env[`API_HEADER_${i}_VALUE`];
+        if (key && value) {
+          headers.push({ key, value });
+        }
+      }
       config = {
         ...config,
         basePath: process.env.API_BASE_PATH,
         apiKey: process.env.API_KEY,
+        headers,
       };
       break;
     case 'SQL':
@@ -97,3 +106,5 @@ export function getFirestoreInstance(): Firestore | null {
   firestoreInstance = initializeFirestore(appInstance, {});
   return firestoreInstance;
 }
+
+    

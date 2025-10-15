@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -29,7 +29,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Loader2, Wand2, Download, Database, FileJson, Flame, Link } from "lucide-react";
+import { Loader2, Wand2, Download, Database, FileJson, Flame, Link, PlusCircle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const databaseOptions = [
@@ -66,9 +66,15 @@ const sqlSchema = baseSchema.extend({
   database: z.string().min(1, "Database name is required."),
 });
 
+const apiHeaderSchema = z.object({
+    key: z.string().min(1, "Header key is required."),
+    value: z.string().min(1, "Header value is required."),
+});
+
 const apiSchema = baseSchema.extend({
     basePath: z.string().url("Must be a valid URL."),
     apiKey: z.string().optional(),
+    headers: z.array(apiHeaderSchema).max(3, "You can add up to 3 global headers.").optional(),
 });
 
 
@@ -95,6 +101,12 @@ export function ConfigureDBForm() {
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    // @ts-ignore
+    name: "headers",
+  });
+
    const populateEnvContent = (values: FormValues) => {
     let content = `DB_TYPE=${values.dbType}\n`;
     switch (values.dbType) {
@@ -113,6 +125,12 @@ FIRESTORE_APP_ID=${values.appId}
 API_BASE_PATH=${values.basePath}
 API_KEY=${values.apiKey || ''}
 `;
+            values.headers?.forEach((header, index) => {
+              if (header.key && header.value) {
+                content += `API_HEADER_${index+1}_KEY=${header.key}\n`;
+                content += `API_HEADER_${index+1}_VALUE=${header.value}\n`;
+              }
+            });
             break;
         case 'SQL':
             content += `
@@ -130,8 +148,8 @@ SQL_DATABASE=${values.database}
   const handleDbTypeChange = (value: DatabaseType) => {
     setDbType(value);
     setEnvContent(null);
-    form.setValue("dbType", value);
     const newDefaults = { dbType: value };
+    // @ts-ignore
     form.reset(newDefaults);
   };
 
@@ -364,14 +382,66 @@ SQL_DATABASE=${values.database}
               name="apiKey"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>API Key (Optional)</FormLabel>
+                  <FormLabel>Authorization Header (Optional)</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Bearer ..." {...field} />
+                    <Input type="password" placeholder="e.g., Bearer <token>" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            <div>
+              <FormLabel>Global API Headers</FormLabel>
+              <div className="space-y-4 pt-2">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="flex flex-wrap items-start gap-2 rounded-lg border p-3">
+                        <FormField
+                            control={form.control}
+                            // @ts-ignore
+                            name={`headers.${index}.key`}
+                            render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormControl>
+                                <Input placeholder="Header Name (e.g. X-API-Key)" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            // @ts-ignore
+                            name={`headers.${index}.value`}
+                            render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormControl>
+                                <Input type="password" placeholder="Header Value" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => remove(index)}
+                        >
+                            <Trash2 />
+                        </Button>
+                    </div>
+                ))}
+                 <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => append({ key: '', value: '' })}
+                  disabled={fields.length >= 3}
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Header
+                </Button>
+              </div>
+            </div>
           </>
         );
       default:
