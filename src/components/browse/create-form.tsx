@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, FilePlus2, BookType, PencilRuler, Play, Wand2 } from 'lucide-react';
-import { Database } from '@/lib/orm/query-builder';
+import { Connection } from '@/lib/orm/query-builder';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -102,7 +102,7 @@ export function CreateForm() {
        return;
     }
     
-    setGeneratedCode(`Database.collection('${collectionName}').add(${docDataString});`);
+    setGeneratedCode(`new Connection().collection('${collectionName}').add(${docDataString});`);
     setFormDataForExec(dataForExec);
   };
 
@@ -141,7 +141,7 @@ export function CreateForm() {
     
     setLoading(true);
     try {
-      const newId = await new Database().collection(collectionName).add(docData);
+      const newId = await new Connection().collection(collectionName).add(docData);
       toast({ title: 'Document Created', description: `New document added with ID: ${newId}` });
       if (useManualJson) {
         setNewDocContent('');

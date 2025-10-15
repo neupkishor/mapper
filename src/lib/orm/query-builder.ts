@@ -3,7 +3,7 @@
 import { DocumentData } from 'firebase/firestore';
 import { getDocuments, addDocument, updateDocument, deleteDocument } from '@/app/actions';
 
-export class Database {
+export class Connection {
     collection(collectionName: string): QueryBuilder {
         return new QueryBuilder(collectionName);
     }
