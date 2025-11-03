@@ -6,7 +6,6 @@ import { Icons } from '@/components/icons';
 import { Menu, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePathname } from 'next/navigation';
 import {
   Collapsible,
@@ -14,17 +13,18 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NProgress from 'nprogress';
 
-function AppSidebar() {
+function AppSidebar({ left }: { left: number }) {
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 flex-shrink-0 border-r bg-card md:block">
-      <ScrollArea className="h-full w-full">
-        <div className="p-4">
-          <MainNav />
-        </div>
-      </ScrollArea>
+    <aside
+      className="fixed top-16 hidden h-[calc(100vh-4rem)] w-64 border-r bg-card md:block overflow-y-auto"
+      style={{ left }}
+    >
+      <div className="p-4">
+        <MainNav />
+      </div>
     </aside>
   );
 }
@@ -73,6 +73,8 @@ function NavLink({
 export function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerLeft, setContainerLeft] = useState(0);
 
   useEffect(() => {
     // Stop loading bar and close menu on route change
@@ -90,6 +92,18 @@ export function MainLayout({ children }: { children: ReactNode }) {
       document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const updateLeft = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      setContainerLeft(rect?.left ?? 0);
+    };
+    updateLeft();
+    window.addEventListener('resize', updateLeft);
+    return () => {
+      window.removeEventListener('resize', updateLeft);
+    };
+  }, []);
 
   return (
       <Collapsible
@@ -140,9 +154,10 @@ export function MainLayout({ children }: { children: ReactNode }) {
             </div>
           </CollapsibleContent>
 
-          <div className="mx-auto flex w-full max-w-[1440px] pt-16">
-            <AppSidebar />
-            <main className="flex-1 h-[calc(100vh-4rem)] overflow-y-auto">
+          <div ref={containerRef} className="mx-auto flex w-full max-w-[1440px] pt-16">
+            <AppSidebar left={containerLeft} />
+            <div className="hidden md:block w-64 flex-shrink-0" aria-hidden="true" />
+            <main className="flex-1">
               <div className="p-4 sm:p-6 md:p-8">
                 {children}
               </div>
