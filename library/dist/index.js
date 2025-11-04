@@ -14,6 +14,4 @@ export class Mapper {
     }
 }
 export default Mapper;
-export * from './actions/ai-schema-suggestion';
-export * from './actions/ai-operation-suggestion';
 export * from './orm';

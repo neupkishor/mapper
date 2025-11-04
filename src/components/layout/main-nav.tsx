@@ -8,13 +8,8 @@ import { Database, Settings, Code, Table, FileJson, BookText } from 'lucide-reac
 const navItems = [
   {
     href: '/',
-    label: 'AI Schema Builder',
+    label: 'Home',
     icon: Database,
-  },
-  {
-    href: '/operate',
-    label: 'AI Operation Builder',
-    icon: Code,
   },
   {
     href: '/browse',
@@ -23,7 +18,7 @@ const navItems = [
   },
   {
     href: '/schemas',
-    label: 'Schema Builder',
+    label: 'Schemas',
     icon: FileJson,
   },
   {
