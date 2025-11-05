@@ -22,7 +22,13 @@ type Schema = {
   }[];
 };
 
-export function CreateForm() {
+type Nouns = { container: string; item: string; itemPlural: string };
+
+export function CreateForm({ nouns }: { nouns?: Nouns }) {
+  const container = nouns?.container ?? 'collection';
+  const item = nouns?.item ?? 'document';
+  const itemPlural = nouns?.itemPlural ?? 'documents';
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const [collectionName, setCollectionName] = useState('');
   const [newDocContent, setNewDocContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -142,7 +148,7 @@ export function CreateForm() {
     setLoading(true);
     try {
       const newId = await new Connection().collection(collectionName).add(docData);
-      toast({ title: 'Document Created', description: `New document added with ID: ${newId}` });
+      toast({ title: `${cap(item)} Created`, description: `New ${item} added with ID: ${newId}` });
       if (useManualJson) {
         setNewDocContent('');
       } else {
@@ -178,14 +184,14 @@ export function CreateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create New Document</CardTitle>
+        <CardTitle>Create New {cap(item)}</CardTitle>
         <CardDescription>
-          Enter a collection name. If a schema exists, a form will be generated. Otherwise, you can enter raw JSON.
+          Enter a {container} name. If a schema exists, a form will be generated. Otherwise, you can enter raw JSON.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col space-y-2">
-          <Label htmlFor="collection-name" className="text-sm font-medium">Collection Name</Label>
+          <Label htmlFor="collection-name" className="text-sm font-medium">{cap(container)} Name</Label>
           <Input
             id="collection-name"
             type="text"
@@ -208,7 +214,7 @@ export function CreateForm() {
         {useManualJson ? (
           <div className="space-y-4">
             <div className="flex flex-col space-y-2">
-                <Label htmlFor="new-doc-content" className="text-sm font-medium">Document JSON</Label>
+                <Label htmlFor="new-doc-content" className="text-sm font-medium">{cap(item)} JSON</Label>
                 <Textarea
                     id="new-doc-content"
                     placeholder='{ "name": "John Doe", "age": 30 }'

@@ -38,7 +38,13 @@ type SortBy = {
   direction: 'asc' | 'desc';
 };
 
-export function GetForm() {
+type Nouns = { container: string; item: string; itemPlural: string };
+
+export function GetForm({ nouns }: { nouns?: Nouns }) {
+  const container = nouns?.container ?? 'collection';
+  const item = nouns?.item ?? 'document';
+  const itemPlural = nouns?.itemPlural ?? 'documents';
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const [collectionName, setCollectionName] = useState('');
   const [fields, setFields] = useState('');
   const [documents, setDocuments] = useState<any[]>([]);
@@ -61,8 +67,8 @@ export function GetForm() {
     if (!collectionName) {
       toast({
         variant: 'destructive',
-        title: 'Collection Name Required',
-        description: 'Please enter a collection name to generate code.',
+        title: `${cap(container)} Name Required`,
+        description: `Please enter a ${container} name to generate code.`,
       });
       return;
     }
@@ -131,8 +137,8 @@ export function GetForm() {
       setDocuments(docs);
       if (docs.length === 0) {
         toast({
-            title: 'No Documents Found',
-            description: `Your query on '${collectionName}' returned no results.`,
+            title: `No ${cap(itemPlural)} Found`,
+            description: `Your query on '${collectionName}' returned no ${itemPlural}.`,
         });
       }
     } catch (e: any) {
@@ -175,12 +181,12 @@ export function GetForm() {
       const docData = JSON.parse(editingDocContent);
       setLoading(true);
       await new Connection().collection(collectionName).update(editingDoc.id, docData);
-      toast({ title: "Document Updated", description: "The document has been updated successfully." });
+      toast({ title: `${cap(item)} Updated`, description: `The ${item} has been updated successfully.` });
       setEditDialogOpen(false);
       await handleFetch(); // Refresh list
     } catch (e: any) {
       console.error("Update error:", e);
-      toast({ variant: "destructive", title: "Failed to update document", description: e.message });
+      toast({ variant: "destructive", title: `Failed to update ${item}`, description: e.message });
     } finally {
       setLoading(false);
     }
@@ -194,11 +200,11 @@ export function GetForm() {
     try {
         setLoading(true);
         await new Connection().collection(collectionName).delete(docId);
-        toast({ title: "Document Deleted", description: "The document has been deleted successfully." });
+        toast({ title: `${cap(item)} Deleted`, description: `The ${item} has been deleted successfully.` });
         await handleFetch(); // Refresh list
     } catch (e: any) {
         console.error("Delete error:", e);
-        toast({ variant: "destructive", title: "Failed to delete document", description: e.message });
+        toast({ variant: "destructive", title: `Failed to delete ${item}`, description: e.message });
     } finally {
         setLoading(false);
     }
@@ -210,13 +216,13 @@ export function GetForm() {
             <CardHeader>
             <CardTitle>Build Your Query</CardTitle>
             <CardDescription>
-                Enter a collection name and add conditions to generate the query code.
+                Enter a {container} name and add conditions to generate the query code.
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-2">
-                    <label htmlFor="collection-name" className="text-sm font-medium">Collection Name</label>
+                    <label htmlFor="collection-name" className="text-sm font-medium">{cap(container)} Name</label>
                     <Input
                         id="collection-name"
                         type="text"

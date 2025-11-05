@@ -20,7 +20,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-export function DeleteForm() {
+type Nouns = { container: string; item: string; itemPlural: string };
+
+export function DeleteForm({ nouns }: { nouns?: Nouns }) {
+  const container = nouns?.container ?? 'collection';
+  const item = nouns?.item ?? 'document';
+  const itemPlural = nouns?.itemPlural ?? 'documents';
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const [collectionName, setCollectionName] = useState('');
   const [docId, setDocId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +35,7 @@ export function DeleteForm() {
 
   const handleGenerateCode = () => {
     if (!collectionName || !docId) {
-        toast({ variant: "destructive", title: "Collection name and Document ID are required." });
+        toast({ variant: "destructive", title: `${cap(container)} name and ${cap(item)} ID are required.` });
         return;
     }
     const code = `new Connection().collection('${collectionName}').delete('${docId}');`;
@@ -40,12 +46,12 @@ export function DeleteForm() {
     setLoading(true);
     try {
         await new Connection().collection(collectionName).delete(docId);
-        toast({ title: "Document Deleted", description: "The document has been deleted successfully." });
+        toast({ title: `${cap(item)} Deleted`, description: `The ${item} has been deleted successfully.` });
         setDocId('');
         setGeneratedCode(null);
     } catch (e: any) {
         console.error("Delete error:", e);
-        toast({ variant: "destructive", title: "Failed to delete document", description: e.message });
+        toast({ variant: "destructive", title: `Failed to delete ${item}`, description: e.message });
     } finally {
         setLoading(false);
     }
@@ -54,15 +60,15 @@ export function DeleteForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Delete a Document</CardTitle>
+        <CardTitle>Delete a {cap(item)}</CardTitle>
         <CardDescription>
-          Provide the collection name and the ID of the document you want to delete.
+          Provide the {container} name and the ID of the {item} you want to delete.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col space-y-2">
-                <label htmlFor="delete-collection-name" className="text-sm font-medium">Collection Name</label>
+                <label htmlFor="delete-collection-name" className="text-sm font-medium">{cap(container)} Name</label>
                 <Input
                     id="delete-collection-name"
                     placeholder="e.g., users"
@@ -71,10 +77,10 @@ export function DeleteForm() {
                 />
             </div>
             <div className="flex flex-col space-y-2">
-                <label htmlFor="delete-doc-id" className="text-sm font-medium">Document ID</label>
+                <label htmlFor="delete-doc-id" className="text-sm font-medium">{cap(item)} ID</label>
                 <Input
                     id="delete-doc-id"
-                    placeholder="Document ID to delete"
+                    placeholder={`${cap(item)} ID to delete`}
                     value={docId}
                     onChange={(e) => setDocId(e.target.value)}
                 />
@@ -105,8 +111,8 @@ export function DeleteForm() {
                         <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the document
-                            with ID <span className="font-bold font-mono">{docId}</span> from the '{collectionName}' collection.
+                            This action cannot be undone. This will permanently delete the {item}
+                            with ID <span className="font-bold font-mono">{docId}</span> from the '{collectionName}' {container}.
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

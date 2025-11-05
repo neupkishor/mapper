@@ -10,7 +10,13 @@ import { Connection } from '@/lib/orm/query-builder';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 
-export function UpdateForm() {
+type Nouns = { container: string; item: string; itemPlural: string };
+
+export function UpdateForm({ nouns }: { nouns?: Nouns }) {
+  const container = nouns?.container ?? 'collection';
+  const item = nouns?.item ?? 'document';
+  const itemPlural = nouns?.itemPlural ?? 'documents';
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const [collectionName, setCollectionName] = useState('');
   const [docId, setDocId] = useState('');
   const [updateContent, setUpdateContent] = useState('');
@@ -20,7 +26,7 @@ export function UpdateForm() {
 
   const handleGenerateCode = () => {
     if (!collectionName || !docId) {
-        toast({ variant: "destructive", title: "Collection name and Document ID are required." });
+        toast({ variant: "destructive", title: `${cap(container)} name and ${cap(item)} ID are required.` });
         return;
     }
      if (!updateContent) {
@@ -43,11 +49,11 @@ export function UpdateForm() {
         const docData = JSON.parse(updateContent);
         setLoading(true);
         await new Connection().collection(collectionName).update(docId, docData);
-        toast({ title: "Document Updated", description: "The document has been updated successfully." });
+        toast({ title: `${cap(item)} Updated`, description: `The ${item} has been updated successfully.` });
         setGeneratedCode(null);
     } catch (e: any) {
         console.error("Update error:", e);
-        toast({ variant: "destructive", title: "Failed to update document", description: e.message });
+        toast({ variant: "destructive", title: `Failed to update ${item}`, description: e.message });
     } finally {
         setLoading(false);
     }
@@ -56,15 +62,15 @@ export function UpdateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Update a Document</CardTitle>
+        <CardTitle>Update a {cap(item)}</CardTitle>
         <CardDescription>
-          Provide the collection name, document ID, and the JSON data to update.
+          Provide the {container} name, {item} ID, and the JSON data to update.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col space-y-2">
-                <label htmlFor="update-collection-name" className="text-sm font-medium">Collection Name</label>
+                <label htmlFor="update-collection-name" className="text-sm font-medium">{cap(container)} Name</label>
                 <Input
                     id="update-collection-name"
                     placeholder="e.g., users"
@@ -73,10 +79,10 @@ export function UpdateForm() {
                 />
             </div>
             <div className="flex flex-col space-y-2">
-                <label htmlFor="update-doc-id" className="text-sm font-medium">Document ID</label>
+                <label htmlFor="update-doc-id" className="text-sm font-medium">{cap(item)} ID</label>
                 <Input
                     id="update-doc-id"
-                    placeholder="Document ID to update"
+                    placeholder={`${cap(item)} ID to update`}
                     value={docId}
                     onChange={(e) => setDocId(e.target.value)}
                 />
