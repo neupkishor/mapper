@@ -2,7 +2,8 @@
 'use client';
 import { DocumentData } from 'firebase/firestore';
 import {
-  getDocumentsWithConnection,
+  getWithConnection,
+  getOneWithConnection,
   addDocumentWithConnection,
   updateDocumentWithConnection,
   deleteDocumentWithConnection,
@@ -51,8 +52,22 @@ export class QueryBuilder {
     return this;
   }
 
-  async getDocuments(...fields: string[]): Promise<DocumentData[]> {
-    return getDocumentsWithConnection(
+  async get(...fields: string[]): Promise<DocumentData[]> {
+    return getWithConnection(
+      this.collectionName,
+      {
+        filters: this.filters,
+        limit: this.limitCount,
+        offset: this.offsetCount,
+        sortBy: this.sorting,
+        fields,
+      },
+      this.connectionName
+    );
+  }
+
+  async getOne(...fields: string[]): Promise<DocumentData | null> {
+    return getOneWithConnection(
       this.collectionName,
       {
         filters: this.filters,

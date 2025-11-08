@@ -78,6 +78,37 @@ export async function getDocumentsWithConnection(
   return getDocumentsOrm(collectionName, options, connectionName);
 }
 
+// New naming: get/getOne with connection
+export async function getWithConnection(
+  collectionName: string,
+  options: {
+    filters: any[];
+    limit: number | null;
+    offset: number | null;
+    sortBy: any | null;
+    fields: string[];
+  },
+  connectionName?: string
+): Promise<DocumentData[]> {
+  // Internally delegates to existing implementation for now
+  return getDocumentsOrm(collectionName, options, connectionName);
+}
+
+export async function getOneWithConnection(
+  collectionName: string,
+  options: {
+    filters: any[];
+    limit: number | null;
+    offset: number | null;
+    sortBy: any | null;
+    fields: string[];
+  },
+  connectionName?: string
+): Promise<DocumentData | null> {
+  const results = await getDocumentsOrm(collectionName, options, connectionName);
+  return Array.isArray(results) && results.length > 0 ? results[0] : null;
+}
+
 export async function addDocumentWithConnection(
   collectionName: string,
   data: DocumentData,

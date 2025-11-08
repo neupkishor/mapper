@@ -126,7 +126,7 @@ export function GetForm({ nouns, dbType }: { nouns?: Nouns; dbType?: DbType | nu
     const fieldsToFetch = fields.split(',').map(f => f.trim()).filter(f => f);
     const fieldsArg = fieldsToFetch.map(f => `'${f}'`).join(', ');
 
-    code += `.getDocuments(${fieldsArg})`;
+    code += `.get(${fieldsArg})`;
 
     setGeneratedCode(code);
     setDocuments([]);
@@ -161,7 +161,7 @@ export function GetForm({ nouns, dbType }: { nouns?: Nouns; dbType?: DbType | nu
       }
 
       const fieldsToFetch = fields.split(',').map(f => f.trim()).filter(f => f);
-      const docs = await query.getDocuments(...fieldsToFetch);
+      const docs = await query.get(...fieldsToFetch);
 
       setDocuments(docs);
       if (docs.length === 0) {

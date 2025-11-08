@@ -116,7 +116,7 @@ const users = await new Connection('default')
   .where('age', '>=', 18)
   .sortBy('name', 'asc')
   .limit(20)
-  .getDocuments('name', 'email');
+  .get('name', 'email');
 
 // Create
 const id = await new Connection('analytics')
@@ -153,7 +153,7 @@ await new Connection('default')
               <pre><code>{`// Using a schema-defined 'products' collection
 const docs = await new Connection('default')
   .collection('products')
-  .getDocuments('name', 'price');
+  .get('name', 'price');
 `}</code></pre>
             </CardContent>
           </Card>
