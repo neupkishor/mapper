@@ -1,5 +1,6 @@
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
 import { Firestore, initializeFirestore } from 'firebase/firestore';
+import { cookies } from 'next/headers';
 
 export type SupportedDbType = 'Firestore' | 'MongoDB' | 'SQL' | 'API';
 
@@ -28,15 +29,65 @@ export interface DbConfig {
 // Named runtime configs, allowing multiple instances per session.
 const runtimeConfigs = new Map<string, DbConfig>();
 
+// Cookie prefixes for persisted data
+const COOKIE_PREFIX_CONFIG = 'mapper_cfg_';
+
+function getCookieKeyForConfig(name: string) {
+  return `${COOKIE_PREFIX_CONFIG}${name}`;
+}
+
+function readConfigFromCookies(name: string): DbConfig | null {
+  try {
+    const store = cookies();
+    const key = getCookieKeyForConfig(name);
+    const c = store.get(key);
+    if (!c?.value) return null;
+    const parsed = JSON.parse(c.value);
+    if (parsed && typeof parsed === 'object' && parsed.dbType) {
+      return parsed as DbConfig;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeConfigToCookies(name: string, config: DbConfig) {
+  try {
+    const store = cookies();
+    const key = getCookieKeyForConfig(name);
+    // Persist for ~1 year; accessible to client to allow clearing
+    store.set({
+      name: key,
+      value: JSON.stringify(config),
+      path: '/',
+      httpOnly: false,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365,
+    } as any);
+  } catch {
+    // best-effort; ignore cookie write failures
+  }
+}
+
+function deleteConfigCookie(name: string) {
+  try {
+    const store = cookies();
+    const key = getCookieKeyForConfig(name);
+    store.delete(key);
+  } catch {
+    // ignore
+  }
+}
+
 // Firestore instances keyed by connection name (to support multiple apps)
 const firestoreInstances = new Map<string, Firestore>();
 const appInstances = new Map<string, FirebaseApp>();
 
 export function setDbConfig(config: DbConfig, name: string = 'default') {
-  if (runtimeConfigs.has(name)) {
-    throw new Error(`Connection name '${name}' already exists. Choose a different name.`);
-  }
+  // Allow updating existing name; newer config wins
   runtimeConfigs.set(name, config);
+  writeConfigToCookies(name, config);
   // Reset caches for this connection name to re-init with new config
   firestoreInstances.delete(name);
   appInstances.delete(name);
@@ -47,20 +98,44 @@ export function clearDbConfig(name?: string) {
     runtimeConfigs.clear();
     firestoreInstances.clear();
     appInstances.clear();
+    // remove all persisted config cookies
+    try {
+      const store = cookies();
+      store.getAll().forEach(c => {
+        if (c.name && c.name.startsWith(COOKIE_PREFIX_CONFIG)) {
+          store.delete(c.name);
+        }
+      });
+    } catch {}
     return;
   }
   runtimeConfigs.delete(name);
   firestoreInstances.delete(name);
   appInstances.delete(name);
+  deleteConfigCookie(name);
 }
 
 export function listRuntimeConfigs(): string[] {
-  return Array.from(runtimeConfigs.keys());
+  const names = new Set<string>(runtimeConfigs.keys());
+  try {
+    const store = cookies();
+    store.getAll().forEach(c => {
+      if (c.name && c.name.startsWith(COOKIE_PREFIX_CONFIG)) {
+        const n = c.name.substring(COOKIE_PREFIX_CONFIG.length);
+        if (n) names.add(n);
+      }
+    });
+  } catch {}
+  return Array.from(names);
 }
 
 export function getDbConfig(name: string = 'default'): DbConfig | null {
   const runtimeConfig = runtimeConfigs.get(name);
   if (runtimeConfig) return runtimeConfig;
+
+  // Try cookie-persisted config
+  const cookieConfig = readConfigFromCookies(name);
+  if (cookieConfig) return cookieConfig;
 
   const type = process.env.CONNECTION_TYPE as SupportedDbType | undefined;
   if (!type) {

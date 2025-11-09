@@ -97,3 +97,37 @@ export async function deleteDocument(collectionName: string, docId: string, conn
   const db = getDb(connectionName);
   await deleteDoc(doc(db, collectionName, docId));
 }
+
+// Bulk operations using filters (optionally limited to one)
+export async function updateByFilter(
+  options: QueryOptions,
+  data: DocumentData,
+  limitOne?: boolean
+): Promise<void> {
+  const db = getDb(options.connectionName);
+  const { collectionName, filters } = options;
+  let q = query(collection(db, collectionName));
+  filters.forEach(f => { q = query(q, where(f.field, f.operator, f.value)); });
+  const snapshot = await getDocs(q);
+  const docs = snapshot.docs;
+  const targets = limitOne ? docs.slice(0, 1) : docs;
+  for (const d of targets) {
+    await updateDoc(doc(db, collectionName, d.id), data);
+  }
+}
+
+export async function deleteByFilter(
+  options: QueryOptions,
+  limitOne?: boolean
+): Promise<void> {
+  const db = getDb(options.connectionName);
+  const { collectionName, filters } = options;
+  let q = query(collection(db, collectionName));
+  filters.forEach(f => { q = query(q, where(f.field, f.operator, f.value)); });
+  const snapshot = await getDocs(q);
+  const docs = snapshot.docs;
+  const targets = limitOne ? docs.slice(0, 1) : docs;
+  for (const d of targets) {
+    await deleteDoc(doc(db, collectionName, d.id));
+  }
+}

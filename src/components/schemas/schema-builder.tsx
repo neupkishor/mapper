@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, PlusCircle, Save, Trash2, Download, Terminal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { listConnections, getRuntimeDbConfig } from '@/app/actions';
+import { getCookie, setCookie, SCHEMA_COOKIE_KEY } from '@/lib/client-cookies';
 
 type ConnectionInfo = { name: string; dbType: string };
 
@@ -70,7 +71,7 @@ export function SchemaBuilder() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       setSchemas(parsed?.[selectedConnectionName] ?? {});
     } catch {}
@@ -94,10 +95,10 @@ export function SchemaBuilder() {
   const onSubmit = (values: SchemaFormValues) => {
     setSaving(true);
     try {
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       parsed[selectedConnectionName] = { ...(parsed[selectedConnectionName] || {}), [values.collectionName]: values };
-      localStorage.setItem('collectionSchemasByConnection', JSON.stringify(parsed));
+      setCookie(SCHEMA_COOKIE_KEY, JSON.stringify(parsed));
       setSchemas(parsed[selectedConnectionName]);
       toast({ title: 'Schema saved', description: `Saved for ${selectedConnectionName}` });
     } catch (e) {
@@ -117,11 +118,11 @@ export function SchemaBuilder() {
     const ok = confirm(`Delete schema "${name}" from ${selectedConnectionName}?`);
     if (!ok) return;
     try {
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       if (parsed[selectedConnectionName]) {
         delete parsed[selectedConnectionName][name];
-        localStorage.setItem('collectionSchemasByConnection', JSON.stringify(parsed));
+        setCookie(SCHEMA_COOKIE_KEY, JSON.stringify(parsed));
         setSchemas(parsed[selectedConnectionName] || {});
       }
       toast({ title: 'Schema deleted', description: name });
@@ -163,8 +164,7 @@ export function SchemaBuilder() {
       {connections.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Active Connection</CardTitle>
-            <CardDescription>Select which configured connection to attach schemas to.</CardDescription>
+            <CardTitle>Select a Connection</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="w-full sm:w-64">
@@ -180,6 +180,9 @@ export function SchemaBuilder() {
                   <SelectValue placeholder="Select connection" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem key="undefined-conn" value="undefined">
+                    connection::undefined (sample only)
+                  </SelectItem>
                   {connections.map((c) => (
                     <SelectItem key={c.name} value={c.name}>
                       {c.name} ({c.dbType})
@@ -199,7 +202,6 @@ export function SchemaBuilder() {
         <Card>
           <CardHeader>
             <CardTitle>Existing Schemas</CardTitle>
-            <CardDescription>Load or delete an existing schema for the active connection.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-3 flex flex-wrap gap-2">
@@ -225,7 +227,6 @@ export function SchemaBuilder() {
         <Card>
           <CardHeader>
             <CardTitle>Define a Schema</CardTitle>
-            <CardDescription>Select a connection above to start building your schema.</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">Schema creation is disabled until you choose an active connection.</p>
@@ -237,9 +238,6 @@ export function SchemaBuilder() {
         <Card>
           <CardHeader>
             <CardTitle>Define a Schema</CardTitle>
-            <CardDescription>
-              {selectedDbType === 'SQL' ? 'Provide a table name, fields, and constraints.' : selectedDbType === 'API' ? 'Define endpoint, URL params, and request/response schemas.' : 'Provide a collection name and fields. Optionally allow extra key-values.'}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -451,4 +449,3 @@ export function SchemaBuilder() {
     </div>
   );
 }
-

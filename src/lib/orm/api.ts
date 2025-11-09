@@ -215,4 +215,34 @@ export async function deleteDocument(
     }
 }
 
+// Simulated bulk operations using GET to discover ids, then mutating
+export async function updateByFilter(
+  options: QueryOptions,
+  data: DocumentData,
+  connectionName?: string,
+  requestOptions?: RequestOptions & { method?: 'PUT' | 'PATCH' },
+  limitOne?: boolean
+): Promise<void> {
+  const matches = await getDocuments({ ...options, connectionName });
+  const ids = matches.map((m: any) => m.id).filter(Boolean);
+  const targetIds = limitOne ? ids.slice(0, 1) : ids;
+  for (const id of targetIds) {
+    await updateDocument(options.collectionName, String(id), data, connectionName, requestOptions);
+  }
+}
+
+export async function deleteByFilter(
+  options: QueryOptions,
+  connectionName?: string,
+  requestOptions?: { query?: Record<string, string> },
+  limitOne?: boolean
+): Promise<void> {
+  const matches = await getDocuments({ ...options, connectionName });
+  const ids = matches.map((m: any) => m.id).filter(Boolean);
+  const targetIds = limitOne ? ids.slice(0, 1) : ids;
+  for (const id of targetIds) {
+    await deleteDocument(options.collectionName, String(id), connectionName, requestOptions);
+  }
+}
+
     

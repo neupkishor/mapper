@@ -86,3 +86,35 @@ export async function deleteDocument(
   }
   return adapter.deleteDocument(collectionName, docId, connectionName);
 }
+
+// Bulk operations by filters (optionally limit to one)
+export async function updateByFilter(
+  collectionName: string,
+  options: QueryOptions,
+  data: DocumentData,
+  connectionName?: string,
+  requestOptions?: { bodyType?: 'json' | 'form' | 'urlencoded'; query?: Record<string, string>; method?: 'PUT' | 'PATCH' },
+  limitOne?: boolean
+): Promise<void> {
+  const adapter = getAdapter(connectionName);
+  const cfg = getDbConfig(connectionName ?? 'default');
+  if (cfg?.dbType === 'API') {
+    return (adapter as any).updateByFilter({ ...options, collectionName }, data, connectionName, requestOptions, limitOne);
+  }
+  return (adapter as any).updateByFilter({ ...options, collectionName }, data, limitOne);
+}
+
+export async function deleteByFilter(
+  collectionName: string,
+  options: QueryOptions,
+  connectionName?: string,
+  requestOptions?: { query?: Record<string, string> },
+  limitOne?: boolean
+): Promise<void> {
+  const adapter = getAdapter(connectionName);
+  const cfg = getDbConfig(connectionName ?? 'default');
+  if (cfg?.dbType === 'API') {
+    return (adapter as any).deleteByFilter({ ...options, collectionName }, connectionName, requestOptions, limitOne);
+  }
+  return (adapter as any).deleteByFilter({ ...options, collectionName }, limitOne);
+}

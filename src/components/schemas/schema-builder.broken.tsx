@@ -17,6 +17,7 @@ import { Loader2, PlusCircle, Save, Trash2, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Terminal } from 'lucide-react';
 import { listConnections, getRuntimeDbConfig } from '@/app/actions';
+import { getCookie, setCookie, SCHEMA_COOKIE_KEY } from '@/lib/client-cookies';
 
 const fieldSchema = z.object({
   fieldName: z.string().min(1, 'Field name is required.'),
@@ -86,7 +87,7 @@ export function SchemaBuilder() {
   // Load schemas for selected connection
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       const perConn = parsed?.[selectedConnectionName] ?? {};
       setSchemas(perConn);
@@ -128,10 +129,10 @@ export function SchemaBuilder() {
       } as any;
       const newSchemas = { ...schemas, [values.collectionName]: normalized };
       // Save under connection-aware storage
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       parsed[selectedConnectionName] = newSchemas;
-      localStorage.setItem('collectionSchemasByConnection', JSON.stringify(parsed));
+      setCookie(SCHEMA_COOKIE_KEY, JSON.stringify(parsed));
       setSchemas(newSchemas);
       toast({
         title: 'Schema Saved',
@@ -161,11 +162,11 @@ export function SchemaBuilder() {
       const newSchemas = { ...schemas };
       delete newSchemas[collectionName];
       // Update connection-aware storage
-      const saved = localStorage.getItem('collectionSchemasByConnection');
+      const saved = getCookie(SCHEMA_COOKIE_KEY);
       const parsed = saved ? JSON.parse(saved) : {};
       if (selectedConnectionName) {
         parsed[selectedConnectionName] = newSchemas;
-        localStorage.setItem('collectionSchemasByConnection', JSON.stringify(parsed));
+        setCookie(SCHEMA_COOKIE_KEY, JSON.stringify(parsed));
       }
       setSchemas(newSchemas);
       form.reset({

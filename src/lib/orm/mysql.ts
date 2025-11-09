@@ -96,11 +96,65 @@ export async function updateDocument(collectionName: string, docId: string, data
 }
 
 export async function deleteDocument(collectionName: string, docId: string, connectionName?: string): Promise<void> {
-    const connection = await getConnection(connectionName);
-    try {
-        const sql = `DELETE FROM \`${collectionName}\` WHERE id = ?`;
-        await connection.execute(sql, [docId]);
-    } finally {
-        await connection.end();
+  const connection = await getConnection(connectionName);
+  try {
+    const sql = `DELETE FROM \`${collectionName}\` WHERE id = ?`;
+    await connection.execute(sql, [docId]);
+  } finally {
+    await connection.end();
+  }
+}
+
+// Bulk operations based on filters (optionally limited to one)
+export async function updateByFilter(
+  options: QueryOptions,
+  data: DocumentData,
+  limitOne?: boolean
+): Promise<void> {
+  const connection = await getConnection(options.connectionName);
+  try {
+    const { collectionName, filters } = options;
+    const fields = Object.keys(data);
+    if (fields.length === 0) return;
+    const setClauses = fields.map(field => `\`${field}\` = ?`).join(', ');
+    const values = [...Object.values(data)];
+    let sql = `UPDATE \`${collectionName}\` SET ${setClauses}`;
+    const whereParams: any[] = [];
+    if (filters && filters.length > 0) {
+      sql += ' WHERE ' + filters.map(f => {
+        whereParams.push(f.value);
+        return `\`${f.field}\` ${f.operator} ?`;
+      }).join(' AND ');
     }
+    if (limitOne) {
+      sql += ' LIMIT 1';
+    }
+    await connection.execute(sql, [...values, ...whereParams]);
+  } finally {
+    await connection.end();
+  }
+}
+
+export async function deleteByFilter(
+  options: QueryOptions,
+  limitOne?: boolean
+): Promise<void> {
+  const connection = await getConnection(options.connectionName);
+  try {
+    const { collectionName, filters } = options;
+    let sql = `DELETE FROM \`${collectionName}\``;
+    const whereParams: any[] = [];
+    if (filters && filters.length > 0) {
+      sql += ' WHERE ' + filters.map(f => {
+        whereParams.push(f.value);
+        return `\`${f.field}\` ${f.operator} ?`;
+      }).join(' AND ');
+    }
+    if (limitOne) {
+      sql += ' LIMIT 1';
+    }
+    await connection.execute(sql, whereParams);
+  } finally {
+    await connection.end();
+  }
 }

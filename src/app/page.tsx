@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/main-layout';
 import LocalStorageWipeSection from '@/components/home/localstorage-wipe';
+import CookiesAndErrorsControls from '@/components/home/cookies-and-errors-controls';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -42,6 +43,25 @@ export default function Home() {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Install Guidelines */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Install in Your App</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <pre className="rounded border bg-muted p-3 text-xs"><code>npm install @neupgroup/mapper
+# or
+yarn add @neupgroup/mapper
+pnpm add @neupgroup/mapper</code></pre>
+            <p className="text-sm text-muted-foreground">
+              Next, learn how to initialize connections and schemas in your app.
+            </p>
+            <Button asChild variant="outline">
+              <Link href="/documentation">Read initialization guide</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -94,6 +114,7 @@ export default function Home() {
         </div>
 
         {/* Tools */}
+        <CookiesAndErrorsControls />
         <LocalStorageWipeSection />
       </div>
     </MainLayout>

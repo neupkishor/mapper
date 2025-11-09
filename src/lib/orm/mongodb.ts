@@ -162,3 +162,43 @@ export async function deleteDocument(collectionName: string, docId: string, conn
     await client.close();
   }
 }
+
+// Bulk operations using filters (optionally limited to one)
+export async function updateByFilter(
+  options: QueryOptions,
+  data: DocumentData,
+  limitOne?: boolean
+): Promise<void> {
+  const { client, db } = await getClientAndDb(options.connectionName);
+  try {
+    const { collectionName, filters } = options;
+    const collection = db.collection(collectionName);
+    const q = buildMongoFilter(filters);
+    if (limitOne) {
+      await collection.updateOne(q, { $set: data });
+    } else {
+      await collection.updateMany(q, { $set: data });
+    }
+  } finally {
+    await client.close();
+  }
+}
+
+export async function deleteByFilter(
+  options: QueryOptions,
+  limitOne?: boolean
+): Promise<void> {
+  const { client, db } = await getClientAndDb(options.connectionName);
+  try {
+    const { collectionName, filters } = options;
+    const collection = db.collection(collectionName);
+    const q = buildMongoFilter(filters);
+    if (limitOne) {
+      await collection.deleteOne(q);
+    } else {
+      await collection.deleteMany(q);
+    }
+  } finally {
+    await client.close();
+  }
+}

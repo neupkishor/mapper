@@ -13,6 +13,8 @@ import {
   addDocument as addDocumentOrm,
   updateDocument as updateDocumentOrm,
   deleteDocument as deleteDocumentOrm,
+  updateByFilter as updateByFilterOrm,
+  deleteByFilter as deleteByFilterOrm,
 } from '@/lib/orm';
 
 const adapter: DbAdapter = {
@@ -157,6 +159,27 @@ export async function deleteDocumentWithConnection(
   requestOptions?: { query?: Record<string, string> }
 ): Promise<void> {
   return deleteDocumentOrm(collectionName, docId, connectionName, requestOptions as any);
+}
+
+export async function updateByFilterWithConnection(
+  collectionName: string,
+  options: { filters: any[]; limit: number | null; offset: number | null; sortBy: any | null; fields: string[]; query?: Record<string, string> },
+  data: DocumentData,
+  connectionName?: string,
+  requestOptions?: { bodyType?: 'json' | 'form' | 'urlencoded'; query?: Record<string, string>; method?: 'PUT' | 'PATCH' },
+  limitOne?: boolean
+): Promise<void> {
+  return updateByFilterOrm(collectionName, options as any, data, connectionName, requestOptions as any, limitOne);
+}
+
+export async function deleteByFilterWithConnection(
+  collectionName: string,
+  options: { filters: any[]; limit: number | null; offset: number | null; sortBy: any | null; fields: string[]; query?: Record<string, string> },
+  connectionName?: string,
+  requestOptions?: { query?: Record<string, string> },
+  limitOne?: boolean
+): Promise<void> {
+  return deleteByFilterOrm(collectionName, options as any, connectionName, requestOptions as any, limitOne);
 }
 
 export async function listConnections(): Promise<string[]> {

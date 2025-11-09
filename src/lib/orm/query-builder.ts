@@ -7,6 +7,8 @@ import {
   addDocumentWithConnection,
   updateDocumentWithConnection,
   deleteDocumentWithConnection,
+  updateByFilterWithConnection,
+  deleteByFilterWithConnection,
 } from '@/app/actions';
 
 export class Connection {
@@ -122,5 +124,45 @@ export class QueryBuilder {
     return deleteDocumentWithConnection(this.collectionName, docId, this.connectionName, {
       query: this.extraQueryParams,
     });
+  }
+
+  // New: update/delete using filters (no docId). When limitOne is true, affect first match only.
+  async updateByFilter(data: DocumentData, limitOne?: boolean) {
+    return updateByFilterWithConnection(
+      this.collectionName,
+      {
+        filters: this.filters,
+        limit: this.limitCount,
+        offset: this.offsetCount,
+        sortBy: this.sorting,
+        fields: [],
+        query: this.extraQueryParams,
+      },
+      data,
+      this.connectionName,
+      {
+        bodyType: this.bodyKind,
+        query: this.extraQueryParams,
+        method: this.updateMethod,
+      },
+      limitOne
+    );
+  }
+
+  async deleteByFilter(limitOne?: boolean) {
+    return deleteByFilterWithConnection(
+      this.collectionName,
+      {
+        filters: this.filters,
+        limit: this.limitCount,
+        offset: this.offsetCount,
+        sortBy: this.sorting,
+        fields: [],
+        query: this.extraQueryParams,
+      },
+      this.connectionName,
+      { query: this.extraQueryParams },
+      limitOne
+    );
   }
 }
