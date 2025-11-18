@@ -1,4 +1,5 @@
 import type { DbAdapter, QueryOptions } from './orm';
+import Mapper from './mapper';
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'int';
 
@@ -315,3 +316,7 @@ export type { DbAdapter, QueryOptions };
 export { parseConnectionsDsl, toNormalizedConnections } from './env';
 export type { EnvDslConnections, NormalizedConnection } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
+
+// Export the simplified Mapper as default
+export { Mapper, createMapper } from './mapper';
+export { default } from './mapper';

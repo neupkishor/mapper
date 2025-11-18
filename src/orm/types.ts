@@ -1,4 +1,5 @@
-import type { DocumentData } from 'firebase/firestore';
+// Use a generic document data type instead of Firebase-specific type
+export type DocumentData = Record<string, any>;
 
 export interface QueryOptions {
   collectionName: string;

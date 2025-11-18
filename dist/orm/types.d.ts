@@ -1,4 +1,4 @@
-import type { DocumentData } from 'firebase/firestore';
+export type DocumentData = Record<string, any>;
 export interface QueryOptions {
     collectionName: string;
     filters: {

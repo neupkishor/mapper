@@ -278,3 +278,6 @@ export const schemas = (() => {
 export { createOrm } from './orm';
 export { parseConnectionsDsl, toNormalizedConnections } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
+// Export the simplified Mapper as default
+export { Mapper, createMapper } from './mapper';
+export { default } from './mapper';

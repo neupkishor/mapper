@@ -89,3 +89,5 @@ export type { DbAdapter, QueryOptions };
 export { parseConnectionsDsl, toNormalizedConnections } from './env';
 export type { EnvDslConnections, NormalizedConnection } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
+export { Mapper, createMapper } from './mapper';
+export { default } from './mapper';
