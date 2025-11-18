@@ -281,3 +281,7 @@ export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
 // Export the simplified Mapper as default
 export { Mapper, createMapper } from './mapper';
 export { default } from './mapper';
+// Export the new fluent/static API
+export { StaticMapper } from './fluent-mapper';
+// Export the new config-based system
+export { ConfigBasedMapper, ConfigLoader, createConfigMapper, getConfigMapper, createDefaultMapper } from './config';

@@ -91,3 +91,7 @@ export type { EnvDslConnections, NormalizedConnection } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
 export { Mapper, createMapper } from './mapper';
 export { default } from './mapper';
+export { StaticMapper } from './fluent-mapper';
+export type { FluentQueryBuilder, FluentConnectionBuilder, FluentSchemaBuilder, FluentSchemaCollectionBuilder, FluentConnectionSelector, FluentMapper } from './fluent-mapper';
+export { ConfigBasedMapper, ConfigLoader, createConfigMapper, getConfigMapper, createDefaultMapper } from './config';
+export type { MapperConfig, ConnectionConfig, DatabaseConnectionConfig, ApiConnectionConfig, ConfigSchema } from './config';

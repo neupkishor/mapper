@@ -8,8 +8,9 @@ Schema and mapping utilities with lightweight ORM helpers. Define schemas, attac
 npm install @neupgroup/mapper
 ```
 
-## 🚀 One-Import Quick Start (NEW!)
+## 🚀 Quick Start Options
 
+### **Option 1: One-Import Quick Start**
 **The simplest way to get started - just import and use:**
 
 ```ts
@@ -30,6 +31,70 @@ const users = await Mapper.get('users')
 const user = await Mapper.getOne('users', { email: 'alice@example.com' })
 await Mapper.update('users', { email: 'alice@example.com' }, { name: 'Alice Cooper' })
 await Mapper.delete('users', { email: 'alice@example.com' })
+```
+
+### **Option 2: Configuration-Based Approach**
+**Use configuration files to manage connections and schemas:**
+
+```ts
+import { createConfigMapper } from '@neupgroup/mapper'
+
+// Define your configuration
+const config = {
+  connections: [
+    ['mydb', 'sql', 'user', 'myapp', 'localhost', 5432],
+    ['myapi', 'api', 'https://api.example.com']
+  ],
+  schemas: {
+    users: {
+      connection: 'mydb',
+      collection: 'users',
+      structure: [
+        { name: 'id', type: 'int', autoIncrement: true },
+        { name: 'name', type: 'string' },
+        { name: 'email', type: 'string' }
+      ]
+    }
+  }
+}
+
+// Create mapper from config
+const mapper = createConfigMapper(config)
+
+// Use the mapper
+await mapper.useConnection('mydb').table('users').add({ name: 'Alice', email: 'alice@example.com' })
+const users = await mapper.useConnection('mydb').table('users').select().execute()
+```
+
+### **Option 3: PHP-Style Fluent API**
+**Use static method chaining for dynamic connections:**
+
+```ts
+import { StaticMapper as Mapper } from '@neupgroup/mapper'
+
+// Create persistent connections
+Mapper.makeConnection('mydb', 'mysql', {
+  host: 'localhost',
+  user: 'root', 
+  password: 'password',
+  database: 'myapp'
+})
+
+// Use connections with method chaining
+const users = await Mapper.useConnection('mydb')
+  .table('users')
+  .select()
+  .where('active', true)
+  .execute()
+
+// Create temporary connections on-the-fly
+const tempData = await Mapper.makeTempConnection('mongodb', {
+  url: 'mongodb://localhost:27017',
+  database: 'temp'
+})
+  .collection('cache')
+  .find({ expired: false })
+  .execute()
 ```
 
 ### **Auto-Configuration Magic** ✨
@@ -420,13 +485,45 @@ const html = getDocumentationHtml()
 
 ## API Reference
 
+### **Core Functions**
 - `connection()` → create connections registry (see `src/index.ts:299`–`301`)
 - `schema(conns?)` → create `SchemaManager` (see `src/index.ts:303`–`306`)
 - `schemas` → singleton `SchemaManager` (see `src/index.ts:308`–`311`)
 - `createOrm(adapter)` → wrapper around a `DbAdapter` (see `src/orm/index.ts:3`–`27`)
 - `parseConnectionsDsl(text)`, `toNormalizedConnections(map)` (see `src/env.ts:31`–`75`, `87`–`95`)
 - `documentationMd`, `markdownToHtml`, `getDocumentationHtml` (see `src/docs.ts:5`–`275`, `277`–`356`)
-- Types: `DbAdapter`, `QueryOptions`, `EnvDslConnections`, `NormalizedConnection`.
+
+### **Configuration-Based API**
+- `createConfigMapper(config)` → Create mapper from configuration object
+- `createDefaultMapper()` → Create mapper with default configuration
+- `ConfigBasedMapper` → Class for configuration-based mapping
+  - `configure(config)` → Configure the mapper
+  - `makeConnection(name, type, config)` → Add connection
+  - `useConnection(name)` → Use specific connection
+  - `getConnection(name)` → Get connection details
+
+### **Fluent API (StaticMapper)**
+- `StaticMapper.makeConnection(name, type, config)` → Create persistent connection
+- `StaticMapper.useConnection(name)` → Use existing connection
+- `StaticMapper.makeTempConnection(type, config)` → Create temporary connection
+- `StaticMapper.getConnection(name)` → Get connection by name
+- `StaticMapper.listConnections()` → List all connections
+
+### **Query Builder Methods**
+- `table(name)` / `collection(name)` → Specify table/collection
+- `select()` / `find()` → Start select query
+- `where(field, value, operator?)` → Add where condition
+- `orderBy(field, direction?)` → Add ordering
+- `limit(count)` → Limit results
+- `execute()` → Execute query
+- `add(data)` → Insert data
+- `update(data)` → Update data
+- `delete()` → Delete data
+
+### **Types**
+- `DbAdapter`, `QueryOptions`, `EnvDslConnections`, `NormalizedConnection`
+- `ConnectionConfig`, `MapperConfig`, `FluentConnectionBuilder`
+- `ConnectionType`: `'sql' | 'mysql' | 'postgres' | 'mongodb' | 'firestore' | 'api'`
 
 ## Build & Local Development
 
@@ -487,23 +584,123 @@ const sm = Mapper.getSchemaManager()
 ### **Common Patterns**
 
 ```ts
-// Pattern 1: Quick CRUD
+// Pattern 1: Quick CRUD (One-Import)
 await Mapper.add('users', data)
 const users = await Mapper.get('users')
 
-// Pattern 2: Conditional updates
-await Mapper.update('users', { status: 'pending' }, { status: 'active' })
+// Pattern 2: Configuration-Based
+const mapper = createConfigMapper(config)
+await mapper.useConnection('mydb').table('users').add(data)
 
-// Pattern 3: Complex queries
+// Pattern 3: Fluent API
+await StaticMapper.useConnection('mydb').table('users').add(data).execute()
+
+// Pattern 4: Complex queries
 const results = await Mapper.use('users')
   .where('age', 18, '>=')
   .where('country', 'US')
   .get()
 
-// Pattern 4: Batch operations
+// Pattern 5: Batch operations
 const users = await Mapper.get('users')
 for (const user of users) {
   await Mapper.update('users', { id: user.id }, { lastSeen: new Date() })
+}
+```
+
+## 🔄 **Choosing the Right Approach**
+
+### **When to Use Each Method**
+
+| Approach | Best For | Example Use Case |
+|----------|----------|------------------|
+| **One-Import** | Quick prototyping, simple apps | `Mapper.add('users', data)` |
+| **Configuration-Based** | Enterprise apps, multiple environments | Load from config files |
+| **Fluent API** | Dynamic connections, runtime decisions | Create temp connections on-demand |
+
+### **Migration Between Approaches**
+
+```ts
+// Start with One-Import
+import Mapper from '@neupgroup/mapper'
+await Mapper.add('users', { name: 'Alice' })
+
+// Gradually move to Configuration-Based
+import { createConfigMapper } from '@neupgroup/mapper'
+const mapper = createConfigMapper(config)
+await mapper.useConnection('mydb').table('users').add({ name: 'Alice' })
+
+// Or use Fluent API for dynamic scenarios
+import { StaticMapper } from '@neupgroup/mapper'
+StaticMapper.makeConnection('temp', 'mysql', config)
+await StaticMapper.useConnection('temp').table('users').add({ name: 'Alice' })
+```
+
+### **Real-World Examples**
+
+**Microservices Configuration:**
+```ts
+// config/mapper.config.ts
+export const mapperConfig = {
+  connections: [
+    ['user-service', 'postgres', 'user', 'users_db', 'user-db.internal', 5432],
+    ['order-service', 'mysql', 'order', 'orders_db', 'order-db.internal', 3306],
+    ['analytics-api', 'api', 'https://analytics.internal.company.com']
+  ]
+}
+
+// services/UserService.ts
+import { createConfigMapper } from '@neupgroup/mapper'
+import { mapperConfig } from '../config/mapper.config'
+
+const mapper = createConfigMapper(mapperConfig)
+
+export class UserService {
+  async getUser(id: string) {
+    return await mapper.useConnection('user-service')
+      .table('users')
+      .select()
+      .where('id', id)
+      .execute()
+  }
+}
+```
+
+**Dynamic Connection Management:**
+```ts
+// utils/ConnectionManager.ts
+import { StaticMapper } from '@neupgroup/mapper'
+
+export class ConnectionManager {
+  private activeConnections: Set<string> = new Set()
+
+  async createTenantConnection(tenantId: string, dbConfig: any) {
+    const connectionName = `tenant-${tenantId}`
+    
+    StaticMapper.makeConnection(connectionName, 'mysql', {
+      host: dbConfig.host,
+      database: `tenant_${tenantId}`,
+      user: dbConfig.user,
+      password: dbConfig.password
+    })
+    
+    this.activeConnections.add(connectionName)
+    return connectionName
+  }
+
+  async queryTenant(tenantId: string, table: string) {
+    const connectionName = `tenant-${tenantId}`
+    return await StaticMapper.useConnection(connectionName)
+      .table(table)
+      .select()
+      .execute()
+  }
+
+  cleanupConnection(tenantId: string) {
+    const connectionName = `tenant-${tenantId}`
+    this.activeConnections.delete(connectionName)
+    // Connection cleanup handled automatically
+  }
 }
 ```
 
