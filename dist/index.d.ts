@@ -1,4 +1,5 @@
 import type { DbAdapter, QueryOptions } from './orm';
+import Mapper from './mapper';
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'int';
 export type ConnectionType = 'mysql' | 'sql' | 'firestore' | 'mongodb' | 'api';
 export interface Field {
@@ -90,7 +91,7 @@ export { parseConnectionsDsl, toNormalizedConnections } from './env';
 export type { EnvDslConnections, NormalizedConnection } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
 export { Mapper, createMapper } from './mapper';
-export { default } from './mapper';
+export default Mapper;
 export { StaticMapper } from './fluent-mapper';
 export type { FluentQueryBuilder, FluentConnectionBuilder, FluentSchemaBuilder, FluentSchemaCollectionBuilder, FluentConnectionSelector, FluentMapper } from './fluent-mapper';
 export { ConfigBasedMapper, ConfigLoader, createConfigMapper, getConfigMapper, createDefaultMapper } from './config';

@@ -1,3 +1,4 @@
+import Mapper from './mapper';
 class AdapterRegistry {
     constructor() {
         this.adaptersByConnection = new Map();
@@ -278,9 +279,9 @@ export const schemas = (() => {
 export { createOrm } from './orm';
 export { parseConnectionsDsl, toNormalizedConnections } from './env';
 export { documentationMd, markdownToHtml, getDocumentationHtml } from './docs';
-// Export the simplified Mapper as default
+// Export the simplified Mapper and default instance
 export { Mapper, createMapper } from './mapper';
-export { default } from './mapper';
+export default Mapper;
 // Export the new fluent/static API
 export { StaticMapper } from './fluent-mapper';
 // Export the new config-based system
